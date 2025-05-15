@@ -1,0 +1,866 @@
+{% load static %}
+
+<!DOCTYPE html> 
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Доставка піци в Pizzadonya – смачна піца в твоєму місті</title>
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="{% static 'cart.js' %}" defer></script>
+    <meta name="description" content="Замовляйте найсмачнішу піцу з безліччю добавок. Доставка по всьому місту!">
+    <meta name="keywords" content="піца гайсин, доставка піца гайсин, піца онлайн гайсин, піца, гайсин, піцадоня, pizzadonya, pizadonya, піца доня, pizza donya, piza donya">
+    <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "cafe",
+          "name": "Pizzadonya",
+          "url": "http://pizzadonya.zzz.com.ua",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "1-го Травня, 21",
+            "addressLocality": "Гайсин",
+            "postalCode": "23700",
+            "addressCountry": "UA"
+          },
+          "telephone": "380966094043",
+          "openingHours": "Mo-Su 10:00-22:00",
+          "menu": "http://pizzadonya.zzz.com.ua"
+        }
+        </script>
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+</head>
+<body>
+    <img src="{% static 'img/logo.jpg' %}" alt="logo">
+    <header>
+        <img src="{% static 'img/logo4.png' %}" alt="Логотип" class="header-logo">
+        <div class="marquee-container">
+            <div class="marquee-infinite">  
+                <img src="{% static 'img/slide.jpg' %}" alt="Слайд 1">
+                <img src="{% static 'img/slide2.jpg' %}" alt="Слайд 2">
+                <img src="{% static 'img/slide4.jpg' %}" alt="Слайд 3">
+                <img src="{% static 'img/newpizza.jpg' %}" alt="Слайд 3">
+                <img src="{% static 'img/krabnew.jpg' %}" alt="Слайд 3">
+                <img src="{% static 'img/slide2.jpg' %}" alt="Слайд 3">
+                <img src="{% static 'img/slide2.jpg' %}" altt="Слайд 3">
+                <img src="{% static 'img/slide2.jpg' %}" alt="Слайд 3">
+            </div>
+        </div>
+
+        <div class="contact-info">
+            <p  class="fa-solid fa-phone" id="tel"> +380966094043</p>
+            <p class="fa-solid fa-phone" id="tel"> +380930949445</p>
+        </div>
+        
+
+        <div class="social-links">
+            <a href="https://www.instagram.com/pizzadonya_ua?igsh=MWdma3U1ZjVvaW85bQ==" target="_blank" class="social-icon">
+                <i class="fab fa-instagram"></i>
+            </a>
+            <a href="https://t.me//pizzadonya" target="_blank" class="social-icon">
+                <i class="fab fa-telegram"></i>
+            </a>
+            <a href="viber://chat?number=%2B380966094043" target="_blank" class="social-icon">
+                <i class="fab fa-viber"></i>
+            </a>
+        </div>
+        <nav class="header-navigation">
+            <a href="#pizzas" class="nav-link">Піца</a>
+            <a href="#salates" class="nav-link">Салати</a>
+            <a href="#snacks" class="nav-link">Снеки</a>
+            <a href="#cold-drinks" class="nav-link">Напої</a>
+            <a href="#sousesdb" class="nav-link">Соуси до бортиків</a>
+        </nav>
+    </header>
+ 
+    <div class="extras-container">
+        <div class="extras-modal-content">
+            <div id="sauces-step" class="extras-step">
+                <h3>Соуси до бортиків (80г)</h3>
+                <div class="extras-list sauces-list">
+                    
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Соус Сирний" data-price="30"> Соус Сирний (30 грн)
+                    </label>
+                    
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Соус BBQ" data-price="30"> Соус BBQ (30 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Соус Кисло-солодкий" data-price="30"> Соус Кисло-солодкий (30 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Соус Тартар" data-price="30"> Соус Тартар (30 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Соус Цезарь фірмовий" data-price="30"> Соус Цезарь фірмовий (35 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Соус Цезарь фірмовий" data-price="30"> Соус Солодкий чілі (30 грн)
+                    </label>
+                </div>
+                <button id="to-toppings" class="next-step">Добавки</button>
+            </div>
+
+            <div id="toppings-step" class="extras-step" style="display:none;">
+                <h3>Вибір добавок</h3>
+                <div class="extras-list toppings-list">
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Соус Вершковий" data-price="35"> Соус Вершковий (35 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Соус Червоний" data-price="30"> Соус Червоний (30 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Сир Моцарела" data-price="50" data-price-30="50" data-price-40="70"> Сир Моцарела (50 грн/70 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Сир Гауда" data-price-30="35" data-price-40="50"> Сир Гауда (35 грн/50 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Сир Горгонзола" data-price-30="40" data-price-40="60"> Сир Горгонзола (40 грн/60 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Сир Пармезан" data-price-30="35" data-price-40="50"> Сир Пармезан (35 грн/50 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Томати" data-price-30="30" data-price-40="40"> Томати (30 грн/40 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Перець Солодкий" data-price-30="30" data-price-40="40"> Перець Солодкий (30 грн/40 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Перець Гострий" data-price-30="40" data-price-40="60"> Перець Гострий (40 грн/60 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Цибуля Синя" data-price-30="25" data-price-40="35"> Цибуля Синя (25 грн/35 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Оливки" data-price-30="25" data-price-40="35"> Оливки (25 грн/35 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Маслини" data-price-30="25" data-price-40="35"> Маслини (25 грн/35 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Печериці" data-price-30="35" data-price-40="45"> Печериці (35 грн/45 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Корнішони" data-price-30="30" data-price-40="40"> Корнішони (30 грн/40 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Салямі" data-price-30="35" data-price-40="45"> Салямі (35 грн/45 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Баварські ковбаски" data-price-30="40" data-price-40="50"> Баварські ковбаски (40 грн/50 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Шинка" data-price-30="40" data-price-40="50"> Шинка (40 грн/50 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Куряче філе" data-price-30="50" data-price-40="65"> Куряче філе (50 грн/65 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Куряче філе копчене" data-price-30="60" data-price-40="100"> Куряче філе копчене (60 грн/100 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Яловичина" data-price-30="90" data-price-40="140"> Яловичина (90 грн/140 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Перепелині яйця" data-price-30="30" data-price-40="50"> Перепелині яйця (30 грн/50 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Ананас" data-price-30="30" data-price-40="40"> Ананас (30 грн/40 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Кукурудза" data-price-30="25" data-price-40="35"> Кукурудза (25 грн/35 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Лосось" data-price-30="70" data-price-40="120"> Лосось (70 грн/120 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Морепродукти" data-price-30="100" data-price-40="200"> Морепродукти (100 грн/200 грн)
+                    </label>
+                </div>
+                <button id="back-to-sauces">Соуси</button>
+                <button id="add-to-cart-with-extras" class="add-to-cart-with-extras">Додати до кошика</button>
+                <button id="close-extras-modal" class="close-modal"></button>
+            </div>
+
+            
+        </div>
+    </div>
+    <div class="extras-container2" style="display: none;">
+            <div id="sauces-step2" class="extras-step">
+                <h3>Соуси </h3>
+                <div class="extras-list sauces-list2">
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Соус Сирний" data-price="30"> Соус Сирний (30 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Соус BBQ" data-price="30"> Соус BBQ (30 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Соус Кисло-солодкий" data-price="30"> Соус Кисло-солодкий (30 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Соус Тартар" data-price="30"> Соус Тартар (30 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Соус Цезарь фірмовий" data-price="35"> Соус Цезарь фірмовий (35 грн)
+                    </label>
+                    <label>
+                        <input type="checkbox" class="extra-option" data-extra="Соус Солодкий чілі" data-price="30"> Соус Солодкий чілі (30 грн)
+                    </label>
+                </div>
+                <button id="add-to-cart-with-extras2">Додати до кошика</button>
+                <button id="close-extras-modal2" class="close-modal">Закрити</button>
+        </div>
+    </div>
+    
+    
+    </section>
+    
+    <h2 class="menu-header" id="pizzas">Піца</h2>
+    <div class="menu-container">
+
+        <div class="pizza-item">
+            <img src="{% static 'img/branch.JPG' %}" alt="Піца Бранч" class="pizza-image">
+            <div class="pizza-details">
+                <h3>Піца Бранч</h3>
+                <p> Соус червоний, сир моцарела, шинка, печериці</p>
+                <button class="add-to-cart" data-name="Піца Бранч (30см)" data-price="210">S - 210грн</button>
+                <button class="add-to-cart" data-name="Піца Бранч (40см)" data-price="290">L - 290грн</button>
+                <button class="add-to-cart" data-name="Піца Бранч (30см 1/2)" data-price="150">L (1/2) - 150грн</button>
+            </div>
+        </div>
+        
+        <div class="pizza-item">
+            <img src="img/margo.JPG" alt="Піца Маргарита" class="pizza-image">
+            <div class="pizza-details">
+                <h3>Піца Маргарита</h3>
+                <p>Соус червоний, сир моцарела, свіжі томати</p>
+                <button class="add-to-cart" data-name="Піца Маргарита (30см)" data-price="170">S - 170грн</button>
+                <button class="add-to-cart" data-name="Піца Маргарита (40см)" data-price="250">L - 250грн</button>
+                <button class="add-to-cart" data-name="Піца Маргарита (30см 1/2)" data-price="130">L (1/2) - 130грн</button>
+            </div>
+        </div>
+
+        <div class="pizza-item">
+            <img src="img/havai.jpeg" alt="Піца Гавайська" class="pizza-image">
+            <div class="pizza-details">
+                <h3>Піца Гавайська</h3>
+                <p>Соус вершковий, сир моцарела, куряче філе, печериці, ананас, кукурудза</p>
+                <button class="add-to-cart" data-name="Піца Гавайська (30см)" data-price="230">S - 230грн</button>
+                <button class="add-to-cart" data-name="Піца Гавайська (40см)" data-price="320">L - 320грн</button>
+                <button class="add-to-cart" data-name="Піца Гавайська (30см 1/2)" data-price="160">L (1/2) - 160грн</button>
+            </div>
+        </div>
+        
+
+        <div class="pizza-item">
+            <img src="img/carbon.JPG" alt="Піца Карбонара" class="pizza-image">
+            <div class="pizza-details">
+                <h3>Піца Карбонара</h3>
+                <p>Соус вершковий, сир моцарела, бекон, печериці, цибуля синя, перепелині яйця</p>
+                <button class="add-to-cart" data-name="Піца Карбонара (30см)" data-price="240">S - 240грн</button>
+                <button class="add-to-cart" data-name="Піца Карбонара (40см)" data-price="330">L - 330грн</button>
+                <button class="add-to-cart" data-name="Піца Карбонара (30см 1/2)" data-price="170">L (1/2) - 170грн</button>
+            </div>
+        </div>
+        
+
+        <div class="pizza-item">
+            <img src="img/4chees.jpeg" alt="Піца Чотири Сира" class="pizza-image">
+            <div class="pizza-details">
+                <h3>Піца Чотири Сира</h3>
+                <p>Соус вершковий, сир моцарела, сир гауда, сир Дор Блю, сир пармезан</p>
+                <button class="add-to-cart" data-name="Піца Чотири Сира (30см)" data-price="240">S - 240грн</button>
+                <button class="add-to-cart" data-name="Піца Чотири Сира (40см)" data-price="330">L - 330грн</button>
+                <button class="add-to-cart" data-name="Піца Чотири Сира (30см 1/2)" data-price="170">L (1/2) - 170грн</button>
+            </div>
+        </div>
+        
+                <div class="pizza-item">
+                    <img src="img/bbq.jpeg" alt="Піца BBQ" class="pizza-image">
+                    <div class="pizza-details">
+                        <h3>Піца BBQ</h3>
+                        <p>Соус барбекю, сир моцарела, бекон, баварські ковбаски, цибуля синя, печериці</p>
+                        <button class="add-to-cart" data-name="Піца BBQ (30см)" data-price="250">S - 250грн</button>
+                        <button class="add-to-cart" data-name="Піца BBQ (40см)" data-price="340">L - 340грн</button>
+                        <button class="add-to-cart" data-name="Піца BBQ (30см 1/2)" data-price="170">L (1/2) - 170грн</button>
+                    </div>
+                </div>
+        
+                <div class="pizza-item">
+                    <img src="img/selanska.jpg" alt="Піца Селянська" class="pizza-image">
+                    <div class="pizza-details">
+                        <h3>Піца Селянська</h3>
+                        <p>Соус червоний, сир моцарела, салямі, шинка, корнішони, печериці, цибуля синя</p>
+                        <button class="add-to-cart" data-name="Піца Селянська (30см)" data-price="240">S - 240грн</button>
+                        <button class="add-to-cart" data-name="Піца Селянська (40см)" data-price="330">L - 330грн</button>
+                        <button class="add-to-cart" data-name="Піца Селянська (30см 1/2)" data-price="170">L (1/2) - 170грн</button>
+                    </div>
+                </div>
+
+        <div class="pizza-item">
+            <img src="img/italiano.png" alt="Піца Італійська" class="pizza-image">
+            <div class="pizza-details">
+                <h3>Піца Італійська</h3>
+                <p>Соус червоний, сир моцарела, салямі, перець червоний, томати, оливки</p>
+                <button class="add-to-cart" data-name="Піца Італійська (30см)" data-price="230">S - 230грн</button>
+                <button class="add-to-cart" data-name="Піца Італійська (40см)" data-price="320">L - 320грн</button>
+                <button class="add-to-cart" data-name="Піца Італійська (30см 1/2)" data-price="160">L (1/2) - 160грн</button>
+            </div>
+        </div>
+        
+        <div class="pizza-item">
+            <img src="img/chily.jpeg" alt="Піца Чилійська" class="pizza-image">
+            <div class="pizza-details">
+                <h3>Піца Чилійська</h3>
+                <p>Соус червоний, сир моцарела, салямі, яловичина, перець солодкий та гострий, томати</p>
+                <button class="add-to-cart" data-name="Піца Чилійська (30см)" data-price="250">S - 250грн</button>
+                <button class="add-to-cart" data-name="Піца Чилійська (40см)" data-price="340">L - 340грн</button>
+                <button class="add-to-cart" data-name="Піца Чилійська (30см 1/2)" data-price="170">L (1/2) - 170грн</button>
+            </div>
+        </div>
+
+        <div class="pizza-item">
+            <img src="img/firmova.png" alt="Піца Фірмова" class="pizza-image">
+            <div class="pizza-details">
+                <h3>Піца Фірмова</h3>
+                <p>Соус вершковий, сир моцарела, сир гауда, куряче копчене філе, салямі, томати</p>
+                <button class="add-to-cart" data-name="Піца Фірмова (30см)" data-price="250">S - 250грн</button>
+                <button class="add-to-cart" data-name="Піца Фірмова (40см)" data-price="340">L - 340грн</button>
+                <button class="add-to-cart" data-name="Піца Фірмова (30см 1/2)" data-price="170">L (1/2) - 170грн</button>
+            </div>
+        </div>
+        
+        <div class="pizza-item">
+            <img src="img/parma.JPG" alt="Піца Парма" class="pizza-image">
+            <div class="pizza-details">
+                <h3>Піца Парма</h3>
+                <p>Соус вершковий, сир моцарела, пармська шинка (прошутто), печериці, рукола, пармезан</p>
+                <button class="add-to-cart" data-name="Піца Парма (30см)" data-price="260">S - 260грн</button>
+                <button class="add-to-cart" data-name="Піца Парма (40см)" data-price="350">L - 350грн</button>
+                <button class="add-to-cart" data-name="Піца Парма (30см 1/2)" data-price="180">L (1/2) - 180грн</button>
+            </div>
+        </div>
+        
+        <div class="pizza-item">
+            <img src="img/vegan.png" alt="Піца Вегано" class="pizza-image">
+            <div class="pizza-details">
+                <h3>Піца Вегано</h3>
+                <p>Соус червоний, сир моцарела, перець солодкий, печериці, томати, цибуля синя, маслини, оливки</p>
+                <button class="add-to-cart" data-name="Піца Вегано (30см)" data-price="210">S - 210грн</button>
+                <button class="add-to-cart" data-name="Піца Вегано (40см)" data-price="290">L - 290грн</button>
+                <button class="add-to-cart" data-name="Піца Вегано (30см 1/2)" data-price="150">L (1/2) - 150грн</button>
+            </div>
+        </div>
+        
+        <div class="pizza-item">
+            <img src="img/meatpiz.JPG" alt="Піца М'ясна" class="pizza-image">
+            <div class="pizza-details">
+                <h3>Піца М'ясна</h3>
+                <p>Соус червоний, сир моцарела, салямі, баварські ковбаски, шинка, бекон, томати</p>
+                <button class="add-to-cart" data-name="Піца М'ясна (30см)" data-price="240">S - 240грн</button>
+                <button class="add-to-cart" data-name="Піца М'ясна (40см)" data-price="330">L - 330грн</button>
+                <button class="add-to-cart" data-name="Піца М'ясна (30см 1/2)" data-price="170">L (1/2) - 170грн</button>
+            </div>
+        </div>
+        
+        <div class="pizza-item">
+            <img src="img/picant.jpeg" alt="Піца Пікантна" class="pizza-image">
+            <div class="pizza-details">
+                <h3>Піца Пікантна</h3>
+                <p>Соус червоний, сир моцарела, яловичина, куряче філе копчене, корнішони, солодкий перець</p>
+                <button class="add-to-cart" data-name="Піца Пікантна (30см)" data-price="250">S - 250грн</button>
+                <button class="add-to-cart" data-name="Піца Пікантна (40см)" data-price="340">L - 340грн</button>
+                <button class="add-to-cart" data-name="Піца Пікантна (30см 1/2)" data-price="170">L (1/2) - 170грн</button>
+            </div>
+        </div>
+        
+        
+                <div class="pizza-item">
+                    <img src="img/calsone.png" alt="Піца Кальцоне" class="pizza-image">
+                    <div class="pizza-details">
+                        <h3>Піца Кальцоне</h3>
+                        <p>Соус червоний, сир моцарела, салямі, шинка, печериці</p>
+                        <button class="add-to-cart" data-name="Піца Кальцоне (30см)" data-price="200">S - 200грн</button>
+                        <button class="add-to-cart" data-name="Піца Кальцоне (40см)" data-price="260">L - 260грн</button>
+                    </div>
+                </div>
+
+                <div class="pizza-item">
+                    <img src="img/paperonip.JPG" alt="Піца Пепероні" class="pizza-image">
+                    <div class="pizza-details">
+                        <h3>Піца Пепероні</h3>
+                        <p>Соус червоний, сир моцарела, салямі пепероні, томати</p>
+                        <button class="add-to-cart" data-name="Піца Пепероні (30см)" data-price="240">S - 240грн</button>
+                        <button class="add-to-cart" data-name="Піца Пепероні (40см)" data-price="330">L - 330грн</button>
+                        <button class="add-to-cart" data-name="Піца Пепероні (30см 1/2)" data-price="170">L (1/2) - 170грн</button>
+                    </div>
+                </div>
+        
+                <div class="pizza-item">
+                    <img src="img/withfish.jpeg" alt="Піца З Морепродуктами" class="pizza-image">
+                    <div class="pizza-details">
+                        <h3>Піца З Морепродуктами</h3>
+                        <p>Соус вершковий, сир моцарела, кальмари, мідії, креветки, рукола</p>
+                        <button class="add-to-cart" data-name="Піца З Морепродуктами (30см)" data-price="250">S - 250грн</button>
+                        <button class="add-to-cart" data-name="Піца З Морепродуктами (40см)" data-price="340">L - 340грн</button>
+                        <button class="add-to-cart" data-name="Піца З Морепродуктами (30см 1/2)" data-price="170">L (1/2) - 170грн</button>
+                    </div>
+                </div>
+
+        <div class="pizza-item">
+            <img src="img/tunec.png" alt="Піца з тунцем" class="pizza-image">
+            <div class="pizza-details">
+                <h3>Піца з тунцем</h3>
+                <p>Соус червоний, оливки, маслини, тунець консервований, рукола</p>
+                <button class="add-to-cart" data-name="Піца з тунцем (30см)" data-price="250">S - 250грн</button>
+                <button class="add-to-cart" data-name="Піца з тунцем (40см)" data-price="340">L - 340грн</button>
+                <button class="add-to-cart" data-name="Піца з тунцем (30см 1/2)" data-price="170">L (1/2) - 170грн</button>
+            </div>
+        </div>
+        
+        <div class="pizza-item">
+            <img src="img/losos.png" alt="Піца з лососем" class="pizza-image">
+            <div class="pizza-details">
+                <h3>Піца з лососем</h3>
+                <p>Соус вершковий, сир моцарела, лосось, рукола, цукіні</p>
+                <button class="add-to-cart" data-name="Піца з лососем (30см)" data-price="260">S - 260грн</button>
+                <button class="add-to-cart" data-name="Піца з лососем (40см)" data-price="350">L - 350грн</button>
+                <button class="add-to-cart" data-name="Піца з лососем (30см 1/2)" data-price="180">L (1/2) - 180грн</button>
+            </div>
+        </div>
+        
+        <div class="pizza-item">
+            <img src="img/cezarpizza.jpg" alt="Піца Цезар" class="pizza-image">
+            <div class="pizza-details">
+                <h3>Піца Цезар</h3>
+                <p>Соус вершковий, сир моцарела, куряче філе копчене, томати, листя салату, соус Цезар, пармезан</p>
+                <button class="add-to-cart" data-name="Піца Цезар (30см)" data-price="250">S - 250грн</button>
+                <button class="add-to-cart" data-name="Піца Цезар (40см)" data-price="340">L - 340грн</button>
+                <button class="add-to-cart" data-name="Піца Цезар (30см 1/2)" data-price="170">L (1/2) - 170грн</button>
+            </div>
+        </div>
+        
+        <div class="pizza-item">
+            <img src="img/focacho.JPG" alt="Піца Фокача" class="pizza-image">
+            <div class="pizza-details">
+                <h3>Піца Фокача</h3>
+                <p>Сир моцарела, орегано, базилік, оливкова олія</p>
+                <button class="add-to-cart" data-name="Піца Фокача (30см)" data-price="130">S - 130грн</button>
+                <button class="add-to-cart" data-name="Піца Фокача (40см)" data-price="160">L - 160грн</button>
+            </div>
+        </div>
+        <div class="pizza-item">
+            <img src="img/colobok.JPG" alt="Піца колобок" class="pizza-image">
+            <div class="pizza-details">
+                <h3>Піца Колобок</h3>
+                <p>Соус вершковий, сир моцарела, кукурудза, куряче копчяне філе, молочні сосіски.</p>
+                <button class="add-to-cart" data-name="Піца Колобок (30см)" data-price="230">S - 230грн</button>
+                <button class="add-to-cart" data-name="Піца Колобок (40см)" data-price="320">L - 320грн</button>
+                <button class="add-to-cart" data-name="Піца Колобок (30см 1/2)" data-price="160">L (1/2) - 160грн</button>
+            </div>
+        </div>
+    <div class="pizza-item">
+            <img src="img/crevetos.JPEG" alt="Піца з креветками" class="pizza-image">
+            <div class="pizza-details">
+                <h3>Піца з креветками</h3>
+                <p>Сир моцарела, креветки, соус цезар, рукола</p>
+                <button class="add-to-cart" data-name="Піца з креветками (30см)" data-price="260">S - 260грн</button>
+                <button class="add-to-cart" data-name="Піца з крветками (40см)" data-price="350">L - 350грн</button>
+                <button class="add-to-cart" data-name="Піца з креветками (30см 1/2)" data-price="180">L (1/2) - 180грн</button>
+            </div>
+        </div>
+        <div class="pizza-item">
+            <img src="img/krab.JPG" alt="Піца з креветками" class="pizza-image">
+            <div class="pizza-details">
+                <h3>Піца "Краб"</h3>
+                <p>Соус вершковий, крабові палички Сурімі, сир моцарела, кукурудза</p>
+                <button class="add-to-cart" data-name="Піца з креветками (30см)" data-price="221">S - 210грн</button>
+                <button class="add-to-cart" data-name="Піца з крветками (40см)" data-price="300">L - 300грн</button>
+                <button class="add-to-cart" data-name="Піца з креветками (30см 1/2)" data-price="150">L (1/2) - 150грн</button>
+            </div>
+        </div>
+    </div>
+
+    <h2 class="menu-header" id="salates">Салати</h2>
+    <div class="menu-container">
+        <div class="salad-item">
+            <img src="img/saladgrec.JPEG" alt="Салат Грецький" class="salad-image">
+            <div class="pizza-details">
+                <h3>Салат "Грецький"</h3>
+                <button class="add-to-cart-simple" data-name="Салат Грецький" data-price="160">160грн</button>
+            </div>
+        </div>
+
+
+        <div class="salad-item">
+            <img src="img/cezar.JPG" alt="Салат Цезар" class="salad-image">
+            <div class="pizza-details">
+                <h3>Салат "Цезар"</h3>
+                <button class="add-to-cart-simple" data-name="Салат Цезар" data-price="180">180грн</button>
+            </div>
+        </div>
+        <div class="salad-item">
+            <img src="img/crevetos.JPG" alt="Салат з креветками" class="salad-image">
+            <div class="pizza-details">
+                <h3>Салат з креветками</h3>
+                <button class="add-to-cart-simple" data-name="Салат з креветками" data-price="180">180грн</button>
+            </div>
+        </div>
+        
+        <div class="salad-item">
+            <img src="img/salastunec.JPEG" alt="Салат з тунцем консервованим" class="salad-image">
+            <div class="pizza-details">
+                <h3>Салат з тунцем консервованим</h3>
+                <button class="add-to-cart-simple" data-name="Салат з тунцем консервованим" data-price="180">180грн</button>
+            </div>
+        </div>
+    </div>
+
+
+    <h2 class="menu-header" id="snacks">Снеки</h2>
+    <div class="menu-container">
+        <div class="snack-item">
+            <img src="img/cartfree.PNG" alt="Картопля фрі" class="snack-image">
+            <div class="pizza-details">
+                <h3>Картопля фрі</h3>
+                <button class="add-to-cart-snack" data-name="Картопля фрі" data-price="80">80 грн (250г)</button>
+            </div>
+        </div>
+
+        <div class="snack-item">
+            <img src="img/filadel.JPG" alt="Кульки Філадельфіяі" class="snack-image">
+            <div class="pizza-details">
+                <h3>Кульки Філадельфія</h3>
+                <button class="add-to-cart-snack" data-name="Кульки Філадельфія" data-price="180">180 грн (15шт)</button>
+            </div>
+        </div>
+
+        <div class="snack-item">
+            <img src="img/onioncirclr.png" alt="Цибулеві кільця" class="snack-image">
+            <div class="pizza-details">
+                <h3>Цибулеві кільця</h3>
+                <button class="add-to-cart-snack" data-name="Цибулеві кільця" data-price="120">120 грн (250г)</button>
+            </div>
+        </div>
+<div class="snack-item">
+            <img src="img/selan.JPG" alt="Цибулеві кільця" class="snack-image">
+            <div class="pizza-details">
+                <h3>Картопля по селянскі</h3>
+                <button class="add-to-cart-snack" data-name="картопля по селянскі" data-price="80">80 грн</button>
+            </div>
+        </div>
+        <div class="snack-item">
+            <img src="img/carkroket.JPG" alt="Картопляні крокети" class="snack-image">
+            <div class="pizza-details">
+                <h3>Картопляні крокети</h3>
+                <button class="add-to-cart-snack" data-name="Картопляні крокети" data-price="80">80 грн (9 шт)</button>
+            </div>
+        </div>
+        <div class="snack-item">
+            <img src="img/nozet.JPG" alt="Картопляні крокети" class="snack-image">
+            <div class="pizza-details">
+                <h3>Картопляні нозети</h3>
+                <button class="add-to-cart-snack" data-name="Картопляні нозети" data-price="80">90 грн (250 гр)</button>
+            </div>
+        </div>
+        <div class="snack-item">
+            <img src="img/camembert.JPG" alt="Картопляні крокети" class="snack-image">
+            <div class="pizza-details">
+                <h3>Сир «camembert»</h3>
+                <button class="add-to-cart-snack" data-name="Картопляні крокети" data-price="80">200 грн (15 шт)</button>
+            </div>
+        </div>
+        
+        <div class="snack-item">
+            <img src="img/nagets.png" alt="Нагетси" class="snack-image">
+            <div class="pizza-details">
+                <h3>Нагетси</h3>
+                <button class="add-to-cart-snack" data-name="Нагетси" data-price="120">120 грн (9 шт)</button>
+            </div>
+        </div>
+        
+        <div class="snack-item">
+            <img src="img/cheesepal.PNG" alt="Сирні палички" class="snack-image">
+            <div class="pizza-details">
+                <h3>Сирні палички</h3>
+                <button class="add-to-cart-snack" data-name="Сирні палички" data-price="170">170 грн (10 шт)</button>
+            </div>
+        </div>
+        
+        <div class="snack-item">
+            <img src="img/clcrevetos.PNG" alt="Креветки в клярі" class="snack-image">
+            <div class="pizza-details">
+                <h3>Креветки в клярі</h3>
+                <button class="add-to-cart-snack" data-name="Креветки в клярі" data-price="180">180 грн (9 шт)</button>
+            </div>
+        </div>
+        
+        <div class="snack-item">
+            <img src="img/crylahonetsous.png" alt="Крильця в медовому соусі" class="snack-image">
+            <div class="pizza-details">
+                <h3>Крильця в медовому соусі</h3>
+                <button class="add-to-cart-snack" data-name="Крильця в медовому соусі" data-price="170">170 грн (500 г)</button>
+            </div>
+        </div>
+        
+        <div class="snack-item">
+            <img src="img/crysbi.PNG" alt="Крильця кріспі" class="snack-image">
+            <div class="pizza-details">
+                <h3>Крильця крісбі</h3>
+                <button class="add-to-cart-snack" data-name="Крильця кріспі" data-price="220">220 грн (9 шт)</button>
+            </div>
+        </div>
+    </div>
+
+    <h2 class="menu-header" id="cold-drinks">Холодні напої</h2>
+    <div class="menu-container">
+        <div class="drink-item">
+            <img src="https://zavernulli.com.ua/files/product/2/1/4/214.jpg" alt="Пепсі ж/б" class="drink-image">
+            <div class="drink-details">
+                <h3>Пепсі ж/б</h3>
+                <button class="add-to-cart-simple" data-name="Пепсі ж/б" data-price="28">28 грн</button>
+            </div>
+        </div>
+    
+        <div class="drink-item">
+            <img src="https://okwine.ua/files/product/61b345336ebb0c2d53db5bdf/30a3fe38-4c76-4416-83a5-b40b708e36f5.full_fanta-fanta-apelsin-zh-b-0-33l.jpg" alt="Фанта ж/б" class="drink-image">
+            <div class="drink-details">
+                <h3>Фанта ж/б</h3>
+                <button class="add-to-cart-simple" data-name="Фанта ж/б" data-price="28">28 грн</button>
+            </div>
+        </div>
+    
+        <div class="drink-item">
+            <img src="https://okwine.ua/files/product/61b345346ebb0c2d53db5db1/21a87ea0-11dc-11eb-abc0-791296eec59d.jpg.jpg" alt="Кока-кола ж/б" class="drink-image">
+            <div class="drink-details">
+                <h3>Кока-кола ж/б</h3>
+                <button class="add-to-cart-simple" data-name="Кока-кола ж/б" data-price="28">28 грн</button>
+            </div>
+        </div>
+    
+        <div class="drink-item">
+            <img src="https://alcomag.ua/upload/iblock/8b4/8f9ah3rnc092t1k5bmnjpfl0pae53k28.jpeg" alt="Schweppes ж/б" class="drink-image">
+            <div class="drink-details">
+                <h3>Schweppes ж/б</h3>
+                <button class="add-to-cart-simple" data-name="Schweppes ж/б" data-price="30">30 грн</button>
+            </div>
+        </div>
+    
+        <div class="drink-item">
+            <img src="https://cdn.27.ua/799/b5/89/7189897_1.jpeg" alt="Burn ж/б" class="drink-image">
+            <div class="drink-details">
+                <h3>Burn ж/б</h3>
+                <button class="add-to-cart-simple" data-name="Burn ж/б" data-price="45">45 грн</button>
+            </div>
+        </div>
+    
+        <div class="drink-item">
+            <img src="https://okwine.ua/files/product/651158fccb9ec8920edb5846/energetichnij-napij-monster-energy-05l.jpg" alt="Monster Energy 0.5л" class="drink-image">
+            <div class="drink-details">
+                <h3>Monster Energy 0.5л</h3>
+                <button class="add-to-cart-simple" data-name="Monster Energy 0.5л" data-price="70">70 грн</button>
+            </div>
+        </div>
+    
+        <div class="drink-item">
+            <img src="https://img.fozzyshop.com.ua/180303-thickbox_default/pepsi-15l.jpg" alt="Пепсі 1.5л" class="drink-image">
+            <div class="drink-details">
+                <h3>Пепсі 1.5л</h3>
+                <button class="add-to-cart-simple" data-name="Пепсі 1.5л" data-price="55">55 грн</button>
+            </div>
+        </div>
+    
+        <div class="drink-item">
+            <img src="https://img.fozzyshop.com.ua/odesa/39614-large_default/napitok-fanta-orange-15l.jpg" alt="Фанта 1.25л" class="drink-image">
+            <div class="drink-details">
+                <h3>Фанта 1.25л</h3>
+                <button class="add-to-cart-simple" data-name="Фанта 1.25л" data-price="50">50 грн</button>
+            </div>
+        </div>
+        <div class="drink-item">
+            <img src="https://myasna-kraina.com.ua/406-large_default/pepsi-sklo-033-l.jpg" alt="Фанта 1.25л" class="drink-image">
+            <div class="drink-details">
+                <h3>Пепсі скло</h3>
+                <button class="add-to-cart-simple" data-name="Пепсі скло" data-price="38">38 грн</button>
+            </div>
+        </div>
+        <div class="drink-item">
+            <img src="https://receptor.com.ua/image/cache/catalog/products/product_1711615439_286_original-637x637.jpeg" alt="Фанта 1.25л" class="drink-image">
+            <div class="drink-details">
+                <h3>Сік Rich 1Л</h3>
+                <button class="add-to-cart-simple" data-name="Сік Rich 1Л" data-price="90">90 грн</button>
+            </div>
+        </div>
+
+        <div class="drink-item">
+            <img src="https://images.silpo.ua/products/1600x1600/0c13f0d6-8a63-4fe3-97d4-6e3b3e1c11f2.png" alt="Фанта 1.25л" class="drink-image">
+            <div class="drink-details">
+                <h3>Coca Cola coffe</h3>
+                <button class="add-to-cart-simple" data-name="Coca Cola coffe" data-price="30">30 грн</button>
+            </div>
+        </div>
+
+        <div class="drink-item">
+            <img src="https://aquamarket.ua/14186-large_default/rich-kids-banan-polunicya-yabluko-02-l-rich-kids-nektar-naturalnij-dityam-z-12-ti-misyaciv.jpg" alt="Фанта 1.25л" class="drink-image">
+            <div class="drink-details">
+                <h3>Сік Rich kids</h3>
+                <button class="add-to-cart-simple" data-name="Сік Rich kids" data-price="25">25 грн</button>
+            </div>
+        </div>
+
+        <div class="drink-item">
+            <img src="https://aquamarket.ua/14186-large_default/rich-kids-banan-polunicya-yabluko-02-l-rich-kids-nektar-naturalnij-dityam-z-12-ti-misyaciv.jpg" alt="Фанта 1.25л" class="drink-image">
+            <div class="drink-details">
+                <h3>Сік Rich kids</h3>
+                <button class="add-to-cart-simple" data-name="Сік Rich kids" data-price="25">25 грн</button>
+            </div>
+        </div>
+
+        <div class="drink-item">
+            <img src="https://img3.zakaz.ua/1.1613034101.ad72436478c_2021-02-11_Tatyana_L/1.1613034101.SNCPSG10.obj.0.1.jpg.oe.jpg.pf.jpg.350nowm.jpg.350x.jpg" alt="Фанта 1.25л" class="drink-image">
+            <div class="drink-details">
+                <h3>сік Sandora</h3>
+                <button class="add-to-cart-simple" data-name="сік Sandora" data-price="90">90 грн</button>
+            </div>
+        </div>
+
+        <div class="drink-item">
+            <img src="https://img3.zakaz.ua/1.1613034101.ad72436478c_2021-02-11_Tatyana_L/1.1613034101.SNCPSG10.obj.0.1.jpg.oe.jpg.pf.jpg.350nowm.jpg.350x.jpg" alt="Фанта 1.25л" class="drink-image">
+            <div class="drink-details">
+                <h3>сік Sandora</h3>
+                <button class="add-to-cart-simple" data-name="сік Sandora" data-price="90">90 грн</button>
+            </div>
+        </div>
+
+        <div class="drink-item">
+            <img src="https://cdn.27.ua/799/30/46/1060934_2.jpeg" alt="Фанта 1.25л" class="drink-image">
+            <div class="drink-details">
+                <h3>Мохіто</h3>
+                <button class="add-to-cart-simple" data-name="Мохіто" data-price="50">50 грн</button>
+            </div>
+        </div>
+
+        <div class="drink-item">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQa5PE0VDKG1RlIak-KkvnYPtcCfINqSUY43Q&s" alt="Фанта 1.25л" class="drink-image">
+            <div class="drink-details">
+                <h3>Спрайт ж/б</h3>
+                <button class="add-to-cart-simple" data-name="Спрайт жб" data-price="28">28 грн</button>
+            </div>
+        </div>
+    </div>
+    
+    <h2 class="menu-header" id="sousesdb">Соуси до бортиків</h2>
+    <div class="menu-container">
+        <div class="salad-item">
+            <div class="pizza-details">
+                <h3>Соус сирний</h3>
+                <button class="add-to-cart-simple" data-name="Соус сирний" data-price="30">30грн</button>
+            </div>
+        </div>
+
+
+        <div class="salad-item">
+            <div class="pizza-details">
+                <h3>Соус BBQ</h3>
+                <button class="add-to-cart-simple" data-name="Соус BBQ" data-price="30">30грн</button>
+            </div>
+        </div>
+        <div class="salad-item">
+            <div class="pizza-details">
+                <h3>Соус Кисло-солодкий</h3>
+                <button class="add-to-cart-simple" data-name="Соус Кисло-солодкий" data-price="30">30грн</button>
+            </div>
+        </div>
+        
+        <div class="salad-item">
+            <div class="pizza-details">
+                <h3>Соус Тартар</h3>
+                <button class="add-to-cart-simple" data-name="Соус Тартар" data-price="30">30грн</button>
+            </div>
+        </div>
+        <div class="salad-item">
+            <div class="pizza-details">
+                <h3> Соус Цезарь фірмовий</h3>
+                <button class="add-to-cart-simple" data-name="Соус Цезарь фірмовий" data-price="35">35грн</button>
+            </div>
+        </div><div class="salad-item">
+            <div class="pizza-details">
+                <h3> Соус Солодкий чілі</h3>
+                <button class="add-to-cart-simple" data-name="Соус Солодкий чілі" data-price="30">30грн</button>
+            </div>
+        </div>
+    </div>
+
+
+    <section id="cart" >
+<div class="cart-button-container">
+    <button id="open-cart-btn" class="open-cart-btn">
+        <img src="img/bin.png" alt="Кошик" class="cart-icon">
+        <div id="item-count" class="item-count">0</div>
+        
+    </button>
+</div>
+
+<div id="cart-modal" class="cart-modal">
+    <div class="cart-modal-content">
+        <span id="close-cart-modal" class="close">&times;</span>
+        <h2>Ваш кошик</h2>
+        <button id="clear-cart" style="display: none;">Очистити кошик</button>
+
+        <div id="cart-items"></div>
+        <div id="cart-total"></div>
+        <button id="clear-cart-btn">Очистити кошик</button>
+
+        <div class="delivery-options">
+            <label>
+                <input type="radio" name="delivery-option" value="Самовивіз" checked> Самовивіз
+            </label>
+            <label>
+                <input type="radio" name="delivery-option" value="Доставка"> Доставка
+            </label>
+        </div>
+        
+        <!-- Поля для Самовивозу -->
+        <div id="pickup-fields">
+            <label>Ім'я: <input type="text" id="pickup-name" placeholder="Ваше ім'я" required></label>
+            <label>Телефон: <input type="text" id="pickup-phone" placeholder="Ваш номер телефону" required></label>
+        </div>
+        
+        <!-- Поля для Доставки -->
+        <div id="delivery-fields" style="display:none;">
+            <label>Ім'я: <input type="text" id="delivery-name" placeholder="Ваше ім'я" required></label>
+            <label>Адреса: <input type="text" id="delivery-address" placeholder="Ваша адреса" required></label>
+            <label>Телефон: <input type="text" id="delivery-phone" placeholder="Ваш номер телефону" required></label>
+        </div>
+        
+        <div id="comment-field">
+            <label>Коментар:
+                <textarea id="delivery-comment" rows="3" placeholder="Додайте ваш коментар тут..."></textarea>
+            </label>
+        </div>
+        
+        
+        <button id="send-to-telegram">Відправити замовлення</button>
+    </div>
+</div>
+    </section>
+
+    <section id="how-to-find-us" class="how-to-find-us">
+        <h2>Як нас знайти</h2>
+        <p>Адреса: Гайсин, вул. 1-го Травня, 21</p>
+        <p>Ми знаходимося між ПриватБанком та міскою радою.</p>
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d164.2111586526372!2d29.380348920822136!3d48.81283851566716!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x40cd7d3776c45af9%3A0xb7eec80f1f9aabcb!2sPizzaDonya!5e0!3m2!1suk!2sua!4v1735133194847!5m2!1suk!2sua" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </section>
+    
+    <script src="cart.js"></script>
+</body>
+</html>
