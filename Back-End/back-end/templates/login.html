@@ -1,0 +1,92 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Вхід на сайт</title>
+    <link rel="icon" type="image/jpg" href="{% static 'img/logo.jpg' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        body {
+            background-color: #007bff;
+            font-family: Arial, sans-serif;
+            color: white;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .login-box {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            width: 400px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 0 15px rgba(0,0,0,0.8);
+        }
+
+        input[type="text"], input[type="password"] {
+            padding: 10px;
+            margin: 10px 0;
+            width: 85%;
+            border-radius: 5px;
+            border: none;
+        }
+
+        button {
+            padding: 10px 25px;
+            background: black;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        a {
+            color: lightblue;
+            text-decoration: none;
+        }
+
+        .toggle-password {
+            cursor: pointer;
+            color: yellow;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h2>Вхід</h2>
+
+        {% if error %}
+            <p style="color: red;">Невірне ім’я користувача або пароль. Спробуйте ще раз.</p>
+        {% endif %}
+        {% if name_error %}
+            <p style="color: red;">Ім’я має бути українською або англійською мовою без цифр.</p>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <input type="text" name="username" value="{{ prev_username|default:'' }}" placeholder="Ім’я користувача" required><br>
+            <input type="password" name="password" placeholder="Пароль" id="password-field" required><br>
+            <label><input type="checkbox" onclick="togglePassword()"> Показати пароль</label><br><br>
+            <input type="text" name="customer_phone" value="{{ prev_phone|default:'' }}" placeholder="Телефон (не для входу)" readonly><br>
+            <button type="submit">Увійти</button>
+        </form>
+
+        <br>
+        <a href="{% url 'password_reset' %}">Забули пароль?</a><br><br>
+        <a href="{% url 'register' %}">Немає акаунта? Зареєструватися</a>
+    </div>
+
+    <script>
+        function togglePassword() {
+            const field = document.getElementById("password-field");
+            field.type = field.type === "password" ? "text" : "password";
+        }
+    </script>
+</body>
+</html>
+
