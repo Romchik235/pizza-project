@@ -27,7 +27,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -41,6 +40,8 @@ INSTALLED_APPS = [
     'corsheaders',        # для доступу з фронтенду (CORS)
     'api',                
 ]
+
+AUTH_USER_MODEL = 'api.CustomUser'
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  # додано сюди
@@ -126,6 +127,13 @@ STATICFILES_DIRS = [
 ]
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Налаштування логіну (при вході)
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/'
+
+# Видаляти сесію при закритті браузера
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 
 
