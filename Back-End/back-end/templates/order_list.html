@@ -1,1 +1,58 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Усі замовлення</title>
+    <style>
+        body {
+            background: #f6f6f6;
+            font-family: Arial;
+            padding: 20px;
+        }
+        table {
+            width: 100%;
+            background: white;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+        th {
+            background: #ddd;
+        }
+    </style>
+</head>
+<body>
+    <h2>Таблиця замовлень</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Ім’я</th>
+                <th>Телефон</th>
+                <th>Тип доставки</th>
+                <th>Страви</th>
+                <th>Очікування (хв)</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for order in orders %}
+            <tr>
+                <td>{{ order.id }}</td>
+                <td>{{ order.user.username|default:"Гість" }}</td>
+                <td>{{ order.phone }}</td>
+                <td>{{ order.get_delivery_type_display }}</td>
+                <td>
+                    {% for item in order.items.all %}
+                        {{ item.menu_item.name }} × {{ item.quantity }}<br>
+                    {% endfor %}
+                </td>
+                <td>{{ order.estimated_time }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
 
