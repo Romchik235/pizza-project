@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Таблиця замовлень (тільки для Lavelas)</title>
+    <style>
+        body {
+            background: linear-gradient(to bottom right, #202047, #6a6abf);
+            color: white;
+            font-family: Arial, sans-serif;
+            padding: 40px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 15px rgba(0,0,0,0.4);
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            color:rgb(255, 114, 59);
+        }
+        th {
+            background: rgba(255, 255, 255, 0.2);
+            color:rgb(255, 114, 59);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            max-width: 1100px;
+            margin: auto;
+        }
+        .logout-link {
+            text-align: right;
+            margin-bottom: 15px;
+        }
+        .logout-link a {
+            color: #fff;
+            text-decoration: underline;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="text-align: center; margin-bottom: 100px; margin-top: 20px; margin-left: 800px"; class="logout-link">
+            <a href="{% url 'home' %}"style="color: yellow; font-weight: bold;">← Повернутися назад на сайт</a>
+        </div>
+        <h2>Замовлення клієнтів — тільки для адміністратора Lavelas</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID замовлення</th>
+                    <th>Ім’я користувача</th>
+                    <th>Телефон</th>
+                    <th>Тип доставки</th>
+                    <th>Адреса (якщо доставка)</th>
+                    <th>Час очікування (хв)</th>
+                    <th>Страви</th>
+                    <th>Коментар до замовлення</th>
+                    <th>Відгуки (якщо є)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>{{ order.id }}</td>
+                    <td>{{ order.user.username|default:"Гість" }}</td>
+                    <td>{{ order.phone }}</td>
+                    <td>{{ order.get_delivery_type_display }}</td>
+
+                    <td> {{ order.phone }}</td>
+                    <td>{{ order.delivery_type }}</td>
+                    <td>{{ order.estimated_time }}</td>
+                    <td>{{ order.comment }}</td>
+
+                    <td>
+                        {% if order.delivery_type == "delivery" %}
+                            {{ order.address }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>{{ order.estimated_time }}</td>
+                    <td>
+                        {% for item in order.items.all %}
+                            {{ item.menu_item.name }} (x{{ item.quantity }})<br>
+                        {% endfor %}
+                    </td>
+                    <td>{{ order.comment }}</td>
+                    <td>
+                        {% for item in order.items.all %}
+                            {% for review in item.menu_item.reviews.all %}
+                                {{ review.user.username|default:"Гість" }}: {{ review.rating }}★ — {{ review.comment }}<br>
+                            {% endfor %}
+                        {% endfor %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
