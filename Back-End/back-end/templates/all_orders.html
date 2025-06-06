@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Усі замовлення</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f2f2f2;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            border: 1px solid #ccc;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f8f8f8;
+        }
+
+        td ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .empty {
+            text-align: center;
+            font-style: italic;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <h2>Усі замовлення</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Ім’я</th>
+                <th>Телефон</th>
+                <th>Замовлення</th>
+                <th>Очікування</th>
+                <th>Відгуки</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>{{ order.id }}</td>
+                <td>{{ order.user.username|default:"Гість" }}</td>
+                <td>{{ order.phone }}</td>
+                <td>
+                    {% for item in order.items.all %}
+                        {{ item.menu_item.name }} (x{{ item.quantity }})<br>
+                    {% endfor %}
+                </td>
+                <td>
+                    {% if order.delivery_type == "pickup" %}
+                        20 хв
+                    {% else %}
+                        45 хв
+                    {% endif %}
+                </td>
+                <td>
+                    {% for item in order.items.all %}
+                        {% for review in item.menu_item.reviews.all %}
+                            {{ review.user.username|default:"Гість" }}: {{ review.rating }}★ — {{ review.comment }}<br>
+                        {% empty %}
+                            Немає
+                        {% endfor %}
+                    {% endfor %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="empty">Немає замовлень</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
+
