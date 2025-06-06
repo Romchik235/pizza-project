@@ -1,0 +1,77 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Панель персоналу</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f9f9f9;
+            padding: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+        form {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <h2>Всі замовлення</h2>
+
+    <form method="get">
+        <input type="text" name="q" placeholder="Пошук..." value="{{ request.GET.q }}">
+        <button type="submit">Знайти</button>
+    </form>
+
+    <br>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Ім’я</th>
+                <th>Телефон</th>
+                <th>Тип доставки</th>
+                <th>Адреса</th>
+                <th>Коментар</th>
+                <th>Статус</th>
+                <th>Час очікування</th>
+                <th>Оновити</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for order in orders %}
+            <tr>
+                <td>{{ order.user.username|default:"Гість" }}</td>
+                <td>{{ order.phone }}</td>
+                <td>{{ order.get_delivery_type_display }}</td>
+                <td>{{ order.address }}</td>
+                <td>{{ order.comment }}</td>
+                <td>{{ order.status }}</td>
+                <td>{{ order.estimated_time }} хв</td>
+                <td>
+                    <form method="post" action="{% url 'update_order_status' order.id %}">
+                        {% csrf_token %}
+                        <select name="status">
+                            <option value="Очікує" {% if order.status == "Очікує" %}selected{% endif %}>Очікує</option>
+                            <option value="Виконано" {% if order.status == "Виконано" %}selected{% endif %}>Виконано</option>
+                        </select>
+                        <button type="submit">Зберегти</button>
+                    </form>
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="7">Немає замовлень.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
