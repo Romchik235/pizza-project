@@ -5,10 +5,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/jpg" href="{% static 'img/logo.jpg' %}" alt="icon">
     <title>Доставка піци в Pizzadonya – смачна піца в твоєму місті</title>
     <link rel="stylesheet" href="{% static 'styles.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="{% static 'cart.js' %}" defer></script>
     <meta name="description" content="Замовляйте найсмачнішу піцу з безліччю добавок. Доставка по всьому місту!">
     <meta name="keywords" content="піца гайсин, доставка піца гайсин, піца онлайн гайсин, піца, гайсин, піцадоня, pizzadonya, pizadonya, піца доня, pizza donya, piza donya">
     <script type="application/ld+json">
@@ -33,27 +33,248 @@
         rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
     />
+
+    <script>
+        window.username = "{% if user.is_authenticated %}{{ user.username|escapejs }}{% else %}{% endif %}";
+        window.isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
+    </script>
+    
 </head>
 <body>
-    <img src="{% static 'img/logo.jpg' %}" alt="logo">
     <header>
+        <h1>Піцерія «PizzaDonya»</h1>
+
+        <div id="cart-icon-wrapper" style="position:fixed; top:24px; right:32px; z-index:2222;">
+            <div style="position: relative;">
+              <img id="open-cart-btn"
+                   src="{% static 'img/bin.png' %}"
+                   alt="Кошик"
+                   style="width:65px;height:65px;border-radius:50%;border:3px solid red;background:black;box-shadow:0 0 12px 2px #ff0000;object-fit:contain;cursor:pointer;">
+              <span id="item-count"
+                    style="position:absolute;top:8px;right:12px;min-width:18px;padding:2px 7px;background:red;color:white;border-radius:50%;font-size:16px;font-weight:bold;display:none;z-index:3;text-align:center;">
+                0
+              </span>
+            </div>
+        </div>          
+
+        <!---->
+          <script>
+            // Робимо window.removeFromCart глобальним для sidepanel
+            function removeFromCart(idx) {
+              cart.splice(idx, 1);
+              renderSidepanelCart();
+              updateCartBadge && updateCartBadge();
+            }
+          </script>
+          
+
+        <!---->
+            <!-- Кошик side-panel -->
+            <div id="cart-sidepanel-overlay" style="display: none;"></div>
+            <aside id="cart-sidepanel" class="cart-sidepanel">
+                <button class="close-sidepanel" id="close-cart-sidepanel">&times;</button>
+                <h2 style="
+                    text-align: center;    
+                    color: #000;            
+                    font-size: 20px;       
+                    font-weight: bold;    
+                    margin: 12px 0;       
+                ">
+                    Розрахунок вашого замовлення
+                </h2>
+                <div id="sidepanel-cart-items" style="color: #000;"></div>
+                <div id="sidepanel-discount-text" style="margin-top: 8px;"></div>
+                <div id="sidepanel-cart-total" style="margin-top: 4px;"></div>
+                <button id="open-order-modal" class="sidepanel-order-btn">
+                  Перейти в кошик і оформити замовлення
+                </button>
+            </aside>
+
+
+            <!-- Modal форма замовлення -->
+            <div id="order-modal-overlay" style="display:none;"></div>
+            <div id="order-modal" class="order-modal">
+                <div class="order-modal-content">
+                    <button id="close-order-modal" class="close-modal-btn">&times;</button>
+                    <h2>Оформити замовлення</h2>
+                    <form id="order-form-sidepanel">
+                        <div id="order-form-fields">
+                            <label>Ім'я: <input type="text" name="name" required></label>
+                            <label>Телефон: <input type="text" name="phone" required></label>
+                            <label>Адреса: <input type="text" name="address" placeholder="Тільки для доставки"></label>
+                            <label>
+                                <input type="radio" name="delivery" value="Самовивіз" checked> Самовивіз
+                                <input type="radio" name="delivery" value="Доставка"> Доставка
+                            </label>
+                            <label>Коментар:
+                                <textarea name="comment" rows="2"></textarea>
+                            </label>
+                        </div>
+                        <button type="submit" class="sidepanel-order-btn">Підтвердити замовлення</button>
+                    </form>
+                </div>
+            </div>
+               
+            {% comment %} <section>
+                <!-- Модальне вікно кошика -->
+                <div id="cart-modal" class="cart-modal" style="display: none;">
+                    <div class="cart-modal-content">
+                            <button class="close-cart-modal" id="close-cart-modal" style="
+                            position: absolute;
+                            top: 10px;
+                            right: 20px;
+                            background: none;
+                            border: none;
+                            font-size: 2rem;
+                            color: #ff0000;
+                            cursor: pointer;
+                            box-shadow: none;
+                            border-radius: 0;
+                            padding: 0;
+                        ">&times;</button>
+                  
+                        <h2>Ваш кошик</h2>
+                        <button id="clear-cart-btn">Очистити кошик</button>
+                    
+                        <div id="cart-items" style="margin-top: 16px;"></div>
+                        <p id="discount-text" style="color: green; margin-top: 8px;"></p>
+                        <div id="cart-total" style="font-weight: bold; margin-top: 12px; color: black;"></div>
+                    
+                        <div class="delivery-options" style="margin-top: 16px;">
+                            <label><input type="radio" name="delivery_type" value="pickup" checked> Самовивіз</label>
+                            <label><input type="radio" name="delivery_type" value="delivery"> Доставка</label>
+                        </div>
+                    
+                        <form id="order-form-modal" style="margin-top: 16px;">
+                            <label for="name">Ім’я:</label>
+                            <input type="text" id="name" name="name" placeholder="Ваше ім’я" required>
+                            <span class="error-message" id="error-name"></span>
+                      
+                            <div id="address-block" style="display: none; margin-top: 8px;">
+                              <label for="address">Адреса:</label>
+                              <input type="text" id="address" name="address" placeholder="Ваша адреса">
+                              <span class="error-message" id="error-address"></span>
+                            </div>
+                      
+                            <label for="phone" style="margin-top: 8px;">Телефон:</label>
+                            <input type="text" id="phone" name="phone" placeholder="Ваш номер телефону" required>
+                            <span class="error-message" id="error-phone"></span>
+                      
+                            <label for="comment" style="margin-top: 8px;">Коментар:</label>
+                            <textarea id="comment" name="comment" placeholder="Додайте ваш коментар тут..." style="width: 100%; height: 60px; margin-top: 4px;"></textarea>
+                      
+                            <button type="submit" id="submit-order-btn"
+                                    style="margin-top: 12px; width: 100%; padding: 12px 0;
+                                           background: #ff0000; color: #fff; border: none;
+                                           border-radius: 6px; font-size: 1.1em; font-weight: bold;
+                                           cursor: pointer;">
+                                Відправити замовлення
+                            </button>
+                        </form>
+                    </div>
+                </div>  
+            </section> {% endcomment %}
+
+            <section>
+                <div id="cart-modal" class="cart-modal" style="display: none;">
+                    <div class="cart-modal-content">
+                        <button class="close-cart-modal" id="close-cart-modal">&times;</button>
+                        <h2>Ваш кошик</h2>
+                        <button id="clear-cart-btn">Очистити кошик</button>
+                
+                        <div id="cart-items" style="margin-top: 16px;"></div>
+                        <p id="discount-text" style="color: green; margin-top: 8px;"></p>
+                        <div id="cart-total" style="font-weight: bold; margin-top: 12px; color: black;"></div>
+                
+                        <div class="delivery-options" style="margin-top: 16px;">
+                        <label><input type="radio" name="delivery_type" value="pickup" checked> Самовивіз</label>
+                        <label><input type="radio" name="delivery_type" value="delivery"> Доставка</label>
+                        </div>
+                
+                        <form id="order-form-modal" style="margin-top: 16px;">
+                        <label for="name">Ім’я:</label>
+                        <input type="text" id="name" name="name" placeholder="Ваше ім’я" required>
+                        <span class="error-message" id="error-name"></span>
+                
+                        <div id="address-block" style="display: none; margin-top: 8px;">
+                            <label for="address">Адреса:</label>
+                            <input type="text" id="address" name="address" placeholder="Ваша адреса">
+                            <span class="error-message" id="error-address"></span>
+                        </div>
+                
+                        <label for="phone" style="margin-top: 8px;">Телефон:</label>
+                        <input type="text" id="phone" name="phone" placeholder="Ваш номер телефону" required>
+                        <span class="error-message" id="error-phone"></span>
+                
+                        <label for="comment" style="margin-top: 8px;">Коментар:</label>
+                        <textarea id="comment" name="comment" placeholder="Додайте ваш коментар тут…" style="width: 100%; height: 60px; margin-top: 4px;"></textarea>
+                
+                        <button type="submit" id="submit-order-btn" style="margin-top: 12px; width: 100%; padding: 12px 0; background: #ff0000; color: #fff; border: none; border-radius: 6px; font-size: 1.1em; font-weight: bold; cursor: pointer;">
+                            Відправити замовлення
+                        </button>
+                        </form>
+                    </div>
+                </div>
+              </section>
+            
+        <!---->
+
+        <div id="welcome-message" class="welcome-message"></div>
+
+
+        {% if messages %}
+            <div class="flash-messages">
+                {% for message in messages %}
+                    <p style="color: green; font-weight: bold; text-align: center; margin-top: 10px;">{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div id="order-feedback-container"></div>
+
+        <!-- Банер для незареєстрованих -->
+        <div class="promo-banner" style="text-align: center; background: yellow; color: black; padding: 15px; margin-top: 15px;">
+            <strong>Ви вже зареєстровані?</strong> <strong>Постійним клієнтам — <span style="color: red;"> 10% знижка</span> на всі замовлення!</strong>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px;">
+            <section class="user-greeting" id="user-greeting" style="margin-bottom: 20px;">
+                {% if user.is_authenticated %}
+                    <strong>Вітаємо вас, {{ user.username }} на нашому сайті! 🧡</strong>
+                {% else %}
+                    <strong>Вітаємо вас, на нашому сайті! 🧡</strong>
+                {% endif %}
+            </section>
+            <div class="auth-buttons" style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                <a href="{% url 'login' %}" class="btn btn-primary" style="padding: 10px 15px; margin: 7px; background-color: #007bff; color: white; border: none; border-radius: 5px;">
+                    <strong>Увійти</strong>
+                </a>
+                <a href="{% url 'logout' %}" class="btn btn-danger" style="padding: 10px 15px; margin: 5px; background-color: crimson; color: white; border: none; border-radius: 5px;">
+                    <strong>Вийти з сайту</strong>
+                </a>
+                <a href="{% url 'register' %}" class="btn btn-success" style="padding: 10px 15px; margin: 4; background-color: #28a745; color: white; border: none; border-radius: 5px; display: inline-block;">
+                    <strong>Зареєструватись на нашому сайті</strong>
+                </a>
+            </div>
+        </div>    
+        
         <img src="{% static 'img/logo4.png' %}" alt="Логотип" class="header-logo">
         <div class="marquee-container">
             <div class="marquee-infinite">  
                 <img src="{% static 'img/slide.jpg' %}" alt="Слайд 1">
                 <img src="{% static 'img/slide2.jpg' %}" alt="Слайд 2">
-                <img src="{% static 'img/slide4.jpg' %}" alt="Слайд 3">
-                <img src="{% static 'img/newpizza.jpg' %}" alt="Слайд 3">
+                <img src="{% static 'img/slide4.jpg' %}" alt="Слайд 4">
+                <img src="{% static 'img/newpizza.jpg' %}" alt="Слайд 5">
                 <img src="{% static 'img/krabnew.jpg' %}" alt="Слайд 3">
-                <img src="{% static 'img/slide2.jpg' %}" alt="Слайд 3">
-                <img src="{% static 'img/slide2.jpg' %}" altt="Слайд 3">
-                <img src="{% static 'img/slide2.jpg' %}" alt="Слайд 3">
+                <img src="{% static 'img/slide1.jpg' %}" alt="Слайд 6" loading="lazy">
+                <img src="{% static 'img/slide2.jpg' %}" alt="Слайд 7" loading="lazy">
+                <img src="{% static 'img/slide3.jpg' %}" alt="Слайд 8" loading="lazy">
             </div>
         </div>
 
         <div class="contact-info">
             <p  class="fa-solid fa-phone" id="tel"> +380966094043</p>
-            <p class="fa-solid fa-phone" id="tel"> +380930949445</p>
+            <p  class="fa-solid fa-phone" id="tel"> +380930949445</p>
         </div>
         
 
@@ -76,124 +297,140 @@
             <a href="#sousesdb" class="nav-link">Соуси до бортиків</a>
         </nav>
     </header>
- 
+
     <div class="extras-container">
         <div class="extras-modal-content">
+            <button onclick="closeExtras()" class="close-btn">✖</button>
+            <!-- Ось тут! Замість <button id="to-toppings" class="next-step">Добавки</button> -->
             <div id="sauces-step" class="extras-step">
                 <h3>Соуси до бортиків (80г)</h3>
                 <div class="extras-list sauces-list">
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Соус Сирний" data-price="30"> Соус Сирний (30 грн)
-                    </label>
-                    
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Соус BBQ" data-price="30"> Соус BBQ (30 грн)
-                    </label>
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Соус Кисло-солодкий" data-price="30"> Соус Кисло-солодкий (30 грн)
-                    </label>
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Соус Тартар" data-price="30"> Соус Тартар (30 грн)
-                    </label>
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Соус Цезарь фірмовий" data-price="30"> Соус Цезарь фірмовий (35 грн)
-                    </label>
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Соус Цезарь фірмовий" data-price="30"> Соус Солодкий чілі (30 грн)
-                    </label>
+                        <label>
+                            <input type="checkbox" class="extra-option" data-extra="Соус Сирний" data-price="30"> Соус Сирний (30 грн)
+                        </label>
+                        <label>
+                            <input type="checkbox" class="extra-option" data-extra="Соус BBQ" data-price="30"> Соус BBQ (30 грн)
+                        </label>
+                        <label>
+                            <input type="checkbox" class="extra-option" data-extra="Соус Кисло-солодкий" data-price="30"> Соус Кисло-солодкий (30 грн)
+                        </label>
+                        <label>
+                            <input type="checkbox" class="extra-option" data-extra="Соус Тартар" data-price="30"> Соус Тартар (30 грн)
+                        </label>
+                        <label>
+                            <input type="checkbox" class="extra-option" data-extra="Соус Цезарь фірмовий" data-price="30"> Соус Цезарь фірмовий (35 грн)
+                        </label>
+                        <label>
+                            <input type="checkbox" class="extra-option" data-extra="Соус Солодкий чилі" data-price="30"> Соус Солодкий чилі (30 грн)
+                        </label> 
                 </div>
-                <button id="to-toppings" class="next-step">Добавки</button>
+                
+                <button id="to-toppings" style="display: block; margin: 20px auto 10px auto; width: 80%; max-width: 240px; font-size: 20px;">Добавки</button>
+                <h2 class="menu-header" id="sousesdb">Соуси до бортиків</h2>
+                <button onclick="document.querySelector('.extras-container2').style.display='flex'" class="add-sauces-separately">
+                    Вибрати соуси окремо
+                </button>
+                <button id="add-selected-sauces-to-cart" 
+                    style="display:block;margin:20px auto 0 auto;width:80%;max-width:240px;font-size:20px;">
+                    Додати до кошика
+                </button>
             </div>
-
+    
             <div id="toppings-step" class="extras-step" style="display:none;">
+                <button onclick="closeExtras()" class="close-btn">✖</button>
                 <h3>Вибір добавок</h3>
                 <div class="extras-list toppings-list">
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Соус Вершковий" data-price="35"> Соус Вершковий (35 грн)
-                    </label>
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Соус Червоний" data-price="30"> Соус Червоний (30 грн)
-                    </label>
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Сир Моцарела" data-price="50" data-price-30="50" data-price-40="70"> Сир Моцарела (50 грн/70 грн)
-                    </label>
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Сир Гауда" data-price-30="35" data-price-40="50"> Сир Гауда (35 грн/50 грн)
-                    </label>
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Сир Горгонзола" data-price-30="40" data-price-40="60"> Сир Горгонзола (40 грн/60 грн)
-                    </label>
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Сир Пармезан" data-price-30="35" data-price-40="50"> Сир Пармезан (35 грн/50 грн)
-                    </label>
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Томати" data-price-30="30" data-price-40="40"> Томати (30 грн/40 грн)
-                    </label>
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Перець Солодкий" data-price-30="30" data-price-40="40"> Перець Солодкий (30 грн/40 грн)
-                    </label>
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Перець Гострий" data-price-30="40" data-price-40="60"> Перець Гострий (40 грн/60 грн)
-                    </label>
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Цибуля Синя" data-price-30="25" data-price-40="35"> Цибуля Синя (25 грн/35 грн)
-                    </label>
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Оливки" data-price-30="25" data-price-40="35"> Оливки (25 грн/35 грн)
-                    </label>
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Маслини" data-price-30="25" data-price-40="35"> Маслини (25 грн/35 грн)
-                    </label>
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Печериці" data-price-30="35" data-price-40="45"> Печериці (35 грн/45 грн)
-                    </label>
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Корнішони" data-price-30="30" data-price-40="40"> Корнішони (30 грн/40 грн)
-                    </label>
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Салямі" data-price-30="35" data-price-40="45"> Салямі (35 грн/45 грн)
-                    </label>
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Баварські ковбаски" data-price-30="40" data-price-40="50"> Баварські ковбаски (40 грн/50 грн)
-                    </label>
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Шинка" data-price-30="40" data-price-40="50"> Шинка (40 грн/50 грн)
-                    </label>
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Куряче філе" data-price-30="50" data-price-40="65"> Куряче філе (50 грн/65 грн)
-                    </label>
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Куряче філе копчене" data-price-30="60" data-price-40="100"> Куряче філе копчене (60 грн/100 грн)
-                    </label>
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Яловичина" data-price-30="90" data-price-40="140"> Яловичина (90 грн/140 грн)
-                    </label>
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Перепелині яйця" data-price-30="30" data-price-40="50"> Перепелині яйця (30 грн/50 грн)
-                    </label>
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Ананас" data-price-30="30" data-price-40="40"> Ананас (30 грн/40 грн)
-                    </label>
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Кукурудза" data-price-30="25" data-price-40="35"> Кукурудза (25 грн/35 грн)
-                    </label>
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Лосось" data-price-30="70" data-price-40="120"> Лосось (70 грн/120 грн)
-                    </label>
-                    <label>
-                        <input type="checkbox" class="extra-option" data-extra="Морепродукти" data-price-30="100" data-price-40="200"> Морепродукти (100 грн/200 грн)
-                    </label>
+                        <label>
+                                <input type="checkbox" class="extra-option" data-extra="Соус Вершковий" data-price="35"> Соус Вершковий (35 грн)
+                        </label>
+                        <label>
+                            <input type="checkbox" class="extra-option" data-extra="Соус Червоний" data-price="30"> Соус Червоний (30 грн)
+                        </label>
+                        <label>
+                            <input type="checkbox" class="extra-option" data-extra="Сир Моцарела" data-price="50" data-price-30="50" data-price-40="70"> Сир Моцарела (50 грн/70 грн)
+                        </label>
+                        <label>
+                            <input type="checkbox" class="extra-option" data-extra="Сир Гауда" data-price-30="35" data-price-40="50"> Сир Гауда (35 грн/50 грн)
+                        </label>
+                        <label>
+                            <input type="checkbox" class="extra-option" data-extra="Сир Горгонзола" data-price-30="40" data-price-40="60"> Сир Горгонзола (40 грн/60 грн)
+                        </label>
+                        <label>
+                            <input type="checkbox" class="extra-option" data-extra="Сир Пармезан" data-price-30="35" data-price-40="50"> Сир Пармезан (35 грн/50 грн)
+                        </label>
+                        <label>
+                            <input type="checkbox" class="extra-option" data-extra="Томати" data-price-30="30" data-price-40="40"> Томати (30 грн/40 грн)
+                        </label>
+                        <label>
+                            <input type="checkbox" class="extra-option" data-extra="Перець Солодкий" data-price-30="30" data-price-40="40"> Перець Солодкий (30 грн/40 грн)
+                        </label>
+                        <label>
+                            <input type="checkbox" class="extra-option" data-extra="Перець Гострий" data-price-30="40" data-price-40="60"> Перець Гострий (40 грн/60 грн)
+                        </label>
+                        <label>
+                            <input type="checkbox" class="extra-option" data-extra="Цибуля Синя" data-price-30="25" data-price-40="35"> Цибуля Синя (25 грн/35 грн)
+                        </label>
+                        <label>
+                            <input type="checkbox" class="extra-option" data-extra="Оливки" data-price-30="25" data-price-40="35"> Оливки (25 грн/35 грн)
+                        </label>
+                        <label>
+                            <input type="checkbox" class="extra-option" data-extra="Маслини" data-price-30="25" data-price-40="35"> Маслини (25 грн/35 грн)
+                        </label>
+                        <label>
+                            <input type="checkbox" class="extra-option" data-extra="Печериці" data-price-30="35" data-price-40="45"> Печериці (35 грн/45 грн)
+                        </label>
+                        <label>
+                            <input type="checkbox" class="extra-option" data-extra="Корнішони" data-price-30="30" data-price-40="40"> Корнішони (30 грн/40 грн)
+                        </label>
+                        <label>
+                            <input type="checkbox" class="extra-option" data-extra="Салямі" data-price-30="35" data-price-40="45"> Салямі (35 грн/45 грн)
+                        </label>
+                        <label>
+                            <input type="checkbox" class="extra-option" data-extra="Баварські ковбаски" data-price-30="40" data-price-40="50"> Баварські ковбаски (40 грн/50 грн)
+                        </label>
+                        <label>
+                            <input type="checkbox" class="extra-option" data-extra="Шинка" data-price-30="40" data-price-40="50"> Шинка (40 грн/50 грн)
+                        </label>
+                        <label>
+                            <input type="checkbox" class="extra-option" data-extra="Куряче філе" data-price-30="50" data-price-40="65"> Куряче філе (50 грн/65 грн)
+                        </label>
+                        <label>
+                            <input type="checkbox" class="extra-option" data-extra="Куряче філе копчене" data-price-30="60" data-price-40="100"> Куряче філе копчене (60 грн/100 грн)
+                        </label>
+                        <label>
+                            <input type="checkbox" class="extra-option" data-extra="Яловичина" data-price-30="90" data-price-40="140"> Яловичина (90 грн/140 грн)
+                        </label>
+                        <label>
+                            <input type="checkbox" class="extra-option" data-extra="Перепелині яйця" data-price-30="30" data-price-40="50"> Перепелині яйця (30 грн/50 грн)
+                        </label>
+                        <label>
+                            <input type="checkbox" class="extra-option" data-extra="Ананас" data-price-30="30" data-price-40="40"> Ананас (30 грн/40 грн)
+                        </label>
+                        <label>
+                            <input type="checkbox" class="extra-option" data-extra="Кукурудза" data-price-30="25" data-price-40="35"> Кукурудза (25 грн/35 грн)
+                        </label>
+                        <label>
+                            <input type="checkbox" class="extra-option" data-extra="Лосось" data-price-30="70" data-price-40="120"> Лосось (70 грн/120 грн)
+                        </label>
+                        <label>
+                            <input type="checkbox" class="extra-option" data-extra="Морепродукти" data-price-30="100" data-price-40="200"> Морепродукти (100 грн/200 грн)
+                        </label> 
                 </div>
-                <button id="back-to-sauces">Соуси</button>
-                <button id="add-to-cart-with-extras" class="add-to-cart-with-extras">Додати до кошика</button>
+                <!-- Ось тут тільки кнопка "Соуси", кнопку "Добавки" видаляємо! -->
+                <button id="back-to-sauces" style="display: block; margin: 30px auto 10px auto; width: 80%; max-width: 240px; font-size: 20px;">Соуси</button>
+                <h2 class="menu-header" id="sousesdb">Соуси до бортиків</h2>
+                <button onclick="document.querySelector('.extras-container2').style.display='flex'" class="add-sauces-separately">
+                    Вибрати соуси окремо
+                </button>
+                <button id="add-to-cart-with-extras">Додати до кошика</button>
                 <button id="close-extras-modal" class="close-modal"></button>
-            </div>
-
-            
+            </div>    
         </div>
     </div>
+
     <div class="extras-container2" style="display: none;">
             <div id="sauces-step2" class="extras-step">
+                <button onclick="closeExtras()" class="close-btn">✖</button>
                 <h3>Соуси </h3>
                 <div class="extras-list sauces-list2">
                     <label>
@@ -215,12 +452,10 @@
                         <input type="checkbox" class="extra-option" data-extra="Соус Солодкий чілі" data-price="30"> Соус Солодкий чілі (30 грн)
                     </label>
                 </div>
-                <button id="add-to-cart-with-extras2">Додати до кошика</button>
+                <button id="add-only-sauces-to-cart">Додати до кошика</button>
                 <button id="close-extras-modal2" class="close-modal">Закрити</button>
         </div>
     </div>
-    
-    
     </section>
     
     <h2 class="menu-header" id="pizzas">Піца</h2>
@@ -259,7 +494,6 @@
             </div>
         </div>
         
-        
         <div class="pizza-item">
             <img src="{% static 'img/carbon.JPG' %}" alt="Піца Карбонара" class="pizza-image">
             <div class="pizza-details">
@@ -271,7 +505,6 @@
             </div>
         </div>
         
-
         <div class="pizza-item">
             <img src="{% static 'img/4chees.jpeg' %}" alt="Піца Чотири Сира" class="pizza-image">
             <div class="pizza-details">
@@ -299,9 +532,15 @@
                     <div class="pizza-details">
                         <h3>Піца Селянська</h3>
                         <p>Соус червоний, сир моцарела, салямі, шинка, корнішони, печериці, цибуля синя</p>
-                        <button class="add-to-cart" data-name="Піца Селянська (30см)" data-price="240">S - 240грн</button>
-                        <button class="add-to-cart" data-name="Піца Селянська (40см)" data-price="330">L - 330грн</button>
-                        <button class="add-to-cart" data-name="Піца Селянська (30см 1/2)" data-price="170">L (1/2) - 170грн</button>
+                        <button class="add-to-cart" data-name="Піца Селянська (30см)" data-price="240">
+                            S - 240грн
+                        </button>
+                        <button class="add-to-cart" data-name="Піца Селянська (40см)" data-price="330">
+                            L - 330грн
+                        </button>
+                        <button class="add-to-cart" data-name="Піца Селянська (30см 1/2)" data-price="170">
+                            L (1/2) - 170грн
+                        </button>
                     </div>
                 </div>
 
@@ -309,10 +548,16 @@
             <img src="{% static 'img/italiano.png' %}" alt="Піца Італійська" class="pizza-image">
             <div class="pizza-details">
                 <h3>Піца Італійська</h3>
-                <p>Соус червоний, сир моцарела, салямі, перець червоний, томати, оливки</p>
-                <button class="add-to-cart" data-name="Піца Італійська (30см)" data-price="230">S - 230грн</button>
-                <button class="add-to-cart" data-name="Піца Італійська (40см)" data-price="320">L - 320грн</button>
-                <button class="add-to-cart" data-name="Піца Італійська (30см 1/2)" data-price="160">L (1/2) - 160грн</button>
+                    <p>Соус червоний, сир моцарела, салямі, перець червоний, томати, оливки</p>
+                    <button class="add-to-cart" data-name="Піца Італійська (30см)" data-price="230">
+                        S - 230грн
+                    </button>
+                    <button class="add-to-cart" data-name="Піца Італійська (40см)" data-price="320">
+                        L - 320грн
+                    </button>
+                    <button class="add-to-cart" data-name="Піца Італійська (30см 1/2)" data-price="160">
+                        L (1/2) - 160грн
+                    </button>
             </div>
         </div>
         
@@ -321,9 +566,15 @@
             <div class="pizza-details">
                 <h3>Піца Чилійська</h3>
                 <p>Соус червоний, сир моцарела, салямі, яловичина, перець солодкий та гострий, томати</p>
-                <button class="add-to-cart" data-name="Піца Чилійська (30см)" data-price="250">S - 250грн</button>
-                <button class="add-to-cart" data-name="Піца Чилійська (40см)" data-price="340">L - 340грн</button>
-                <button class="add-to-cart" data-name="Піца Чилійська (30см 1/2)" data-price="170">L (1/2) - 170грн</button>
+                    <button class="add-to-cart" data-name="Піца Чилійська (30см)" data-price="250">
+                        S - 250грн
+                    </button>
+                    <button class="add-to-cart" data-name="Піца Чилійська (40см)" data-price="340">
+                        L - 340грн
+                    </button>
+                    <button class="add-to-cart" data-name="Піца Чилійська (30см 1/2)" data-price="170">
+                        L (1/2) - 170грн
+                    </button>
             </div>
         </div>
 
@@ -382,16 +633,16 @@
             </div>
         </div>
         
-
-                <div class="pizza-item">
-                    <img src="{% static 'img/calsone.png' %}" alt="Піца Кальцоне" class="pizza-image">
-                    <div class="pizza-details">
-                        <h3>Піца Кальцоне</h3>
-                        <p>Соус червоний, сир моцарела, салямі, шинка, печериці</p>
-                        <button class="add-to-cart" data-name="Піца Кальцоне (30см)" data-price="200">S - 200грн</button>
-                        <button class="add-to-cart" data-name="Піца Кальцоне (40см)" data-price="260">L - 260грн</button>
-                    </div>
-                </div>
+        <div class="pizza-item">
+            <img src="{% static 'img/calsone.png' %}" alt="Піца Кальцоне" class="pizza-image">
+            <div class="pizza-details">
+                <h3>Піца Кальцоне</h3>
+                <p>Соус червоний, сир моцарела, салямі, шинка, печериці</p>
+                <button class="add-to-cart" data-name="Піца Кальцоне (30см)" data-price="200">S - 200грн</button>
+                <button class="add-to-cart" data-name="Піца Кальцоне (40см)" data-price="260">L - 260грн</button>
+                <button class="add-to-cart" data-name="Піца Кальцоне (30см 1/2)" data-price="260">L (1/2) - 260грн</button>
+            </div>
+        </div>
 
                 <div class="pizza-item">
                     <img src="{% static 'img/paperonip.JPG' %}" alt="Піца Пепероні" class="pizza-image">
@@ -422,7 +673,7 @@
                 <p>Соус червоний, оливки, маслини, тунець консервований, рукола</p>
                 <button class="add-to-cart" data-name="Піца з тунцем (30см)" data-price="250">S - 250грн</button>
                 <button class="add-to-cart" data-name="Піца з тунцем (40см)" data-price="340">L - 340грн</button>
-                <button class="add-to-cart" data-name="Піца з тунцем (30см 1/2)" data-price="170">L (1/2) - 170грн</button>
+                <button class="add-to-cart" data-name="Піца з тунцем (30см 1/2)" data-price="170"">L (1/2) - 170грн</button>
             </div>
         </div>
         
@@ -433,7 +684,7 @@
                 <p>Соус вершковий, сир моцарела, лосось, рукола, цукіні</p>
                 <button class="add-to-cart" data-name="Піца з лососем (30см)" data-price="260">S - 260грн</button>
                 <button class="add-to-cart" data-name="Піца з лососем (40см)" data-price="350">L - 350грн</button>
-                <button class="add-to-cart" data-name="Піца з лососем (30см 1/2)" data-price="180">L (1/2) - 180грн</button>
+                <button class="add-to-cart" data-name="Піца з лососем (30см 1/2)" data-price="180">L (1/2) - 175грн</button>
             </div>
         </div>
         
@@ -455,6 +706,7 @@
                 <p>Сир моцарела, орегано, базилік, оливкова олія</p>
                 <button class="add-to-cart" data-name="Піца Фокача (30см)" data-price="130">S - 130грн</button>
                 <button class="add-to-cart" data-name="Піца Фокача (40см)" data-price="160">L - 160грн</button>
+                <button class="add-to-cart" data-name="Піца Фокача (30см 1/2)" data-price="160">L (1/2) - 80грн</button>
             </div>
         </div>
         <div class="pizza-item">
@@ -478,13 +730,13 @@
             </div>
         </div>
         <div class="pizza-item">
-            <img src="{% static 'img/krab.JPG' %}" alt="Піца з креветками" class="pizza-image">
+            <img src="{% static 'img/krab.JPG' %}" alt="Піца Краб" class="pizza-image">
             <div class="pizza-details">
                 <h3>Піца "Краб"</h3>
                 <p>Соус вершковий, крабові палички Сурімі, сир моцарела, кукурудза</p>
-                <button class="add-to-cart" data-name="Піца з креветками (30см)" data-price="221">S - 210грн</button>
-                <button class="add-to-cart" data-name="Піца з крветками (40см)" data-price="300">L - 300грн</button>
-                <button class="add-to-cart" data-name="Піца з креветками (30см 1/2)" data-price="150">L (1/2) - 150грн</button>
+                <button class="add-to-cart" data-name="Піца Краб (30см)" data-price="221">S - 210грн</button>
+                <button class="add-to-cart" data-name="Піца Краб (40см)" data-price="300">L - 300грн</button>
+                <button class="add-to-cart" data-name="Піца Краб (35см 1/2)" data-price="150">L (1/2) - 150грн</button>
             </div>
         </div>
     </div>
@@ -498,7 +750,6 @@
                 <button class="add-to-cart-simple" data-name="Салат Грецький" data-price="160">160грн</button>
             </div>
         </div>
-
 
         <div class="salad-item">
             <img src="{% static 'img/cezar.JPG' %}" alt="Салат Цезар" class="salad-image">
@@ -525,7 +776,6 @@
         </div>
     </div>
 
-
     <h2 class="menu-header" id="snacks">Снеки</h2>
     <div class="menu-container">
         <div class="snack-item">
@@ -535,7 +785,6 @@
                 <button class="add-to-cart-snack" data-name="Картопля фрі" data-price="80">80 грн (250г)</button>
             </div>
         </div>
-
         <div class="snack-item">
             <img src="{% static 'img/filadel.JPG' %}" alt="Кульки Філадельфіяі" class="snack-image">
             <div class="pizza-details">
@@ -551,11 +800,11 @@
                 <button class="add-to-cart-snack" data-name="Цибулеві кільця" data-price="120">120 грн (250г)</button>
             </div>
         </div>
-<div class="snack-item">
+        <div class="snack-item">
            <img src="{% static 'img/selan.JPG' %}" alt="Цибулеві кільця" class="snack-image">
             <div class="pizza-details">
-                <h3>Картопля по селянскі</h3>
-                <button class="add-to-cart-snack" data-name="картопля по селянскі" data-price="80">80 грн</button>
+                <h3>Картопля по селянски</h3>
+                <button class="add-to-cart-snack" data-name="картопля по селянски" data-price="80">80 грн</button>
             </div>
         </div>
         <div class="snack-item">
@@ -565,12 +814,11 @@
                 <button class="add-to-cart-snack" data-name="Картопляні крокети" data-price="80">80 грн (9 шт)</button>
             </div>
         </div>
-
         <div class="snack-item">
             <img src="{% static 'img/nozet.JPG' %}" alt="Картопляні крокети" class="snack-image">
             <div class="pizza-details">
                 <h3>Картопляні нозети</h3>
-                <button class="add-to-cart-snack" data-name="Картопляні нозети" data-price="80">90 грн (250 гр)</button>
+                <button class="add-to-cart-snack" data-name="Картопляні нозети" data-price="90">90 грн (250 гр)</button>
             </div>
         </div>
 
@@ -618,7 +866,7 @@
             <img src="{% static 'img/crysbi.PNG' %}" alt="Крильця кріспі" class="snack-image">
             <div class="pizza-details">
                 <h3>Крильця крісбі</h3>
-                <button class="add-to-cart-snack" data-name="Крильця кріспі" data-price="220">220 грн (9 шт)</button>
+                <button class="add-to-cart-snack" data-name="Крильця крісбі" data-price="220">220 грн (9 шт)</button>
             </div>
         </div>
     </div>
@@ -803,70 +1051,267 @@
     </div>
 
 
-    <section id="cart" >
-<div class="cart-button-container">
-    <button id="open-cart-btn" class="open-cart-btn">
-        <img src="{% static 'img/bin.png' %}" alt= "Кошик" class="cart-icon">
-        <div id="item-count" class="item-count">0</div>
-        
-    </button>
-</div>
-
-<div id="cart-modal" class="cart-modal">
-    <div class="cart-modal-content">
-        <span id="close-cart-modal" class="close">&times;</span>
-        <h2>Ваш кошик</h2>
-        <button id="clear-cart" style="display: none;">Очистити кошик</button>
-
-        <div id="cart-items">
-
-        </div>
-        <div id="cart-total">
-
-        </div>
-        <button id="clear-cart-btn">Очистити кошик</button>
-
-        <div class="delivery-options">
-            <label>
-                <input type="radio" name="delivery-option" value="Самовивіз" checked> Самовивіз
-            </label>
-            <label>
-                <input type="radio" name="delivery-option" value="Доставка"> Доставка
-            </label>
-        </div>
-        
-        
-        <div id="pickup-fields">
-            <label>Ім'я: <input type="text" id="pickup-name" placeholder="Ваше ім'я" required></label>
-            <label>Телефон: <input type="text" id="pickup-phone" placeholder="Ваш номер телефону" required></label>
-        </div>
-        
-        <!-- Поля для Доставки -->
-        <div id="delivery-fields" style="display:none;">
-            <label>Ім'я: <input type="text" id="delivery-name" placeholder="Ваше ім'я" required></label>
-            <label>Адреса: <input type="text" id="delivery-address" placeholder="Ваша адреса" required></label>
-            <label>Телефон: <input type="text" id="delivery-phone" placeholder="Ваш номер телефону" required></label>
-        </div>
-        
-        <div id="comment-field">
-            <label>Коментар:
-                <textarea id="delivery-comment" rows="3" placeholder="Додайте ваш коментар тут..."></textarea>
-            </label>
-        </div>
-        
-        
-        <button id="send-to-telegram">Відправити замовлення</button>
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}">Назад</a>
+        {% endif %}
+        <span>{{ page_obj.number }} {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">Вперед</a>
+        {% endif %}
     </div>
-</div>
+
+    {% if request.GET.thanks %}
+        <div style="color: green; text-align: center; font-size: 20px; margin: 20px 0;">
+            Дякуємо, ваш відгук збережено ! ❤️
+        </div>
+    {% endif %}           
+
+    <section style="text-align: center; margin-top: 30px;">
+        <button id="open-review-modal"
+                style="padding: 15px 25px;
+                    background: linear-gradient(to right, #ffcc00, #ff66cc);
+                    border: none;
+                    border-radius: 4px;
+                    color: white;
+                    font-size: 16px;
+                    cursor: pointer;">
+            ★ Оцініть наш сервіс
+        </button>
+
+        <!-- Контейнер-модалка (спочатку прихований: display:none) -->
+        <div class="modal-review" id="reviewModal" style="
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: rgba(0, 0, 0, 0.6);
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+            ">
+            <!-- Білий блок із контентом форми + списком відгуків -->
+            <div class="modal-review-content" style="
+                    background: #ffffff;
+                    border-radius: 8px;
+                    padding: 20px 25px;
+                    max-width: 480px;
+                    width: 90%;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                    position: relative;
+                ">
+                <!-- Заголовок -->
+                <h2 style="
+                        text-align: center;
+                        color: #e91e63;
+                        font-size: 24px;
+                        text-shadow: 0 2px 4px rgba(233,30,99,0.4);
+                        margin-bottom: 20px;
+                    ">
+                    Залиште свій відгук
+                </h2>
+
+                <!-- Закриваючий хрестик у правому верхньому куті -->
+                <span id="closeReviewModal"
+                    style="
+                        position: absolute;
+                        top: 12px;
+                        right: 16px;
+                        font-size: 28px;
+                        color: #888888;
+                        cursor: pointer;
+                    ">
+                    &times;
+                </span>
+
+                <!-- Форма відгуку (метод POST) -->
+                <form method="POST" action="/submit-review/" id="reviewForm" style="margin-bottom: 30px;">
+                    {% csrf_token %}
+                    <label for="rating" style="display: block; font-weight: bold; margin-bottom: 6px;">
+                        Оцінка:
+                    </label>
+                    <select name="rating" id="rating" required style="
+                            width: 100%;
+                            padding: 8px;
+                            border: 1px solid #cccccc;
+                            border-radius: 4px;
+                            margin-bottom: 14px;
+                        ">
+                        <option value="5">5 ★★★★★ – Топово</option>
+                        <option value="4">4 ★★★★</option>
+                        <option value="3">3 ★★★ – Середньо</option>
+                        <option value="2">2 ★★</option>
+                        <option value="1">1 ★ – Погано</option>
+                    </select>
+
+                    <label for="comment" style="display: block; font-weight: bold; margin-bottom: 6px;">
+                        Коментар:
+                    </label>
+                    <textarea name="comment" id="comment" placeholder="Ваш коментар..."
+                            required
+                            style="
+                                width: 100%;
+                                min-height: 80px;
+                                padding: 8px;
+                                border: 1px solid #cccccc;
+                                border-radius: 4px;
+                                resize: vertical;
+                                margin-bottom: 16px;
+                            ">
+                    </textarea>
+
+                    <button type="submit" style="
+                            width: 100%;
+                            padding: 10px 0;
+                            background: #3f51b5;
+                            color: white;
+                            border: none;
+                            border-radius: 4px;
+                            font-size: 16px;
+                            cursor: pointer;
+                        ">
+                        Надіслати
+                    </button>
+                </form>
+
+                <!-- Секція «Відгуки наших клієнтів» -->
+                <h2 style="
+                        text-align: center;
+                        color: #e91e63;
+                        font-size: 20px;
+                        margin-bottom: 12px;
+                    ">
+                    Відгуки наших клієнтів
+                </h2>
+                <div style="
+                        max-height: 300px;
+                        overflow-y: auto;
+                        padding-right: 4px;
+                    ">
+                    {% for review in all_reviews %}
+                        <div style="margin-bottom: 10px; color: #333333; text-align: center;">
+                            <strong>{{ review.user.username|default:"Гість" }}</strong>
+                            — <span style="color: #ff9800;">{{ review.rating }}★</span>
+                            — {{ review.comment }}
+                        </div>
+                    {% empty %}
+                        <div style="text-align: center; color: #777777; font-style: italic;">
+                            Ще немає відгуків.
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Посилання на Instagram -->
+                <div style="text-align: center; margin-top: 20px; font-size: 14px;">
+                    Приєднуйтесь до нас в Instagram:<br>
+                    <a href="https://www.instagram.com/pizzadonya_ua/" target="_blank"
+                    style="color: #e1306c; text-decoration: none;">
+                        @PizzaDonya_ua
+                    </a>
+                </div>
+            </div>
+        </div>
     </section>
+
+    <div style="text-align: center; margin-top: 20px;">
+        {% if user.is_authenticated and user.is_superuser %}
+            <a href="{% url 'admin_custom_orders' %}" style="font-weight: bold; font-size: 18px; color: yellow;">
+                📋 Переглянути всі замовлення (таблиця для власника)
+            </a>
+        {% endif %}
+    </div>
+    
+
+
+    {% comment %} {% if user.is_authenticated and not user.is_superuser %}
+        <h2>Ваші замовлення</h2>
+        <table border="1" style="width: 100%; text-align: center;">
+            <thead>
+                <tr>
+                    <th>Ім’я</th>
+                    <th>Сума</th>
+                    <th>Тип доставки</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                    <tr>
+                        <td>{{ order.name }}</td>
+                        <td>{{ order.total_sum }} грн</td>
+                        <td>{{ order.delivery_type }}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="3">Немає замовлень</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %} {% endcomment %}
+ 
+    {% comment %} {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li style="color: green; font-weight: bold;">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %} {% endcomment %}
+
 
     <section id="how-to-find-us" class="how-to-find-us">
         <h2>Як нас знайти</h2>
         <p>Адреса: Гайсин, вул. 1-го Травня, 21</p>
-        <p>Ми знаходимося між ПриватБанком та міскою радою.</p>
+        <p>Ми знаходимося між ПриватБанком та міською радою.</p>
         <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d164.2111586526372!2d29.380348920822136!3d48.81283851566716!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x40cd7d3776c45af9%3A0xb7eec80f1f9aabcb!2sPizzaDonya!5e0!3m2!1suk!2sua!4v1735133194847!5m2!1suk!2sua" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
     </section>
-    
-    <script src="cart.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const greetingEl = document.getElementById('user-greeting');
+            if (window.username) {
+                greetingEl.innerHTML = `<strong>Вітаємо вас, ${window.username} на нашому сайті! 🧡</strong>`;
+            } else {
+                greetingEl.innerHTML = `<strong>Вітаємо вас, на нашому сайті! 🧡</strong>`;
+            }
+        });
+    </script>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const openBtn  = document.getElementById('open-review-modal');
+            const modal    = document.getElementById('reviewModal');
+            const closeBtn = document.getElementById('closeReviewModal');
+
+            if (!openBtn || !modal || !closeBtn) {
+                // Якщо будь-якого елемента не знайдено, нічого не робити
+                return;
+            }
+
+            // При натисканні на кнопку «★ Оцініть наш сервіс»
+            openBtn.addEventListener('click', function() {
+                modal.style.display = 'flex';
+            });
+
+            // При натисканні на хрестик «×»
+            closeBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+            });
+
+            // Якщо клікнули у затемненому фоні поза білим блоком
+            modal.addEventListener('click', function(e) {
+                // e.target === modal означає, що не було кліку по внутрішніх елементах
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        });
+    </script>
+
+
+    <script src="{% static 'cart.js' %}" defer></script>
+    {% comment %} <script src="{% static 'cart_display_core.js' %}" defer></script> {% endcomment %}
+    {% comment %} <script src="{% static 'test.js' %}"defer></script> {% endcomment %}
+ 
 </body>
 </html>
