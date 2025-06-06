@@ -1,651 +1,892 @@
-// Масив для зберігання елементів кошика
-let cart = [];
-let currentPizzaName = ''; // Зберігає ім'я піци для поточного вибору
-let currentPizzaSize = ''; // Зберігає розмір піци для поточного вибору
+// ---- GLOBAL ----
+// let cart = [];
+window.cart = [];
+window.currentPizza = null;
 
-// Вартість добавок
-const extraPrices = {
-    "Гриби": { "30см": 50, "40см": 70 },
-    "Соус BBQ": { "30см": 30, "40см": 30 },
-    "Соус BBQ(дб)": { "30см": 30, "40см": 30 },
-    "Пепероні": { "30см": 30, "40см": 30 },
-    "Сир Фета": { "30см": 25, "40см": 25 },
-    "Сир Моцарела": { "30см": 50, "40см": 70 },
-    "Соус Червоний(дб)": { "30см": 30, "40см": 30 },
-    "Соус Червоний": { "30см": 30, "40см": 30 },
-    "Соус Вершковий": { "30см": 35, "40см": 35 },
-    "Соус Вершковий(дб)": { "30см": 35, "40см": 35 },
-    "Соус Цезарь фірмовий": { "30см": 35, "40см": 35 },
-    "Соус Тартар": { "30см": 30, "40см": 30 },
-    "Соус Сирний": { "30см": 30, "40см": 30 },
-    "Соус Кисло-солодкий": { "30см": 30, "40см": 30 },
-    "Сир Гауда": { "30см": 35, "40см": 50 },
-    "Сир Горгонзола": { "30см": 40, "40см": 60 },
-    "Сир Пармезан": { "30см": 35, "40см": 50 },
-    "Томати": { "30см": 30, "40см": 40 },
-    "Перець Солодкий": { "30см": 30, "40см": 40 },
-    "Перець Гострий": { "30см": 40, "40см": 60 },
-    "Цибуля Синя": { "30см": 25, "40см": 35 },
-    "Оливки": { "30см": 25, "40см": 35 },
-    "Маслини": { "30см": 25, "40см": 35 },
-    "Корнішони": { "30см": 30, "40см": 40 },
-    "Салямі": { "30см": 35, "40см": 45 },
-    "Баварські ковбаски": { "30см": 40, "40см": 50 },
-    "Шинка": { "30см": 40, "40см": 50 },
-    "Куряче філе": { "30см": 50, "40см": 65 },
-    "Куряче філе копчене": { "30см": 60, "40см": 100 },
-    "Яловичина": { "30см": 90, "40см": 140 },
-    "Перепелині яйця": { "30см": 30, "40см": 50 },
-    "Ананас": { "30см": 30, "40см": 40 },
-    "Кукурудза": { "30см": 25, "40см": 35 },
-    "Лосось": { "30см": 70, "40см": 120 },
-    "Морепродукти": { "30см": 100, "40см": 200 }
+// Глобальна функція для видалення товару з кошика 
+window.removeFromCart = function(idx) {
+    cart.splice(idx, 1);
+    updateCartDisplay();
+    if (typeof renderSidepanelCart === 'function') {
+        renderSidepanelCart();
+    }
 };
 
-// Функція додавання до кошика
-function addToCart(itemName, itemPrice, isPizza = true) {
-    // Якщо це не піца (салат чи закуска)
-    if (!isPizza) {
-        cart.push({ name: itemName, price: itemPrice });
-        updateCart(); // Оновити кошик
+// Додаємо слухачі для кнопок ПІЦ (тільки для .add-to-cart)
+document.addEventListener("DOMContentLoaded", () => {
+    // 4.1) Кнопки “add-to-cart” для піц
+    document.querySelectorAll('.add-to-cart').forEach(btn => {
+        btn.addEventListener('click', function() {
+            window.currentPizza = {
+                name: this.getAttribute('data-name'),
+                price: parseFloat(this.getAttribute('data-price')),
+                extras: []
+            };
+            document.querySelector('.extras-container').style.display = 'flex';
+            document.getElementById('sauces-step').style.display = 'block';
+            document.getElementById('toppings-step').style.display = 'none';
+        });
+    });
+
+    // 4.2) Кнопка “Додати до кошика з extras” (другий крок)
+    document.getElementById("add-to-cart-with-extras")?.addEventListener("click", () => {
+        handleAddWithExtras("toppings-step");
+    });
+    document.getElementById("to-toppings")?.addEventListener("click", () => {
+        document.getElementById('sauces-step').style.display = 'none';
+        document.getElementById('toppings-step').style.display = 'block';
+    });
+    document.getElementById('back-to-sauces')?.addEventListener('click', () => {
+        document.getElementById('toppings-step').style.display = 'none';
+        document.getElementById('sauces-step').style.display = 'block';
+    });
+
+    // 4.3) Кнопки “Додати соуси окремо”
+    document.querySelectorAll('.add-sauces-separately').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelector('.extras-container').style.display = 'none';
+            document.querySelector('.extras-container2').style.display = 'flex';
+        });
+    });
+    document.getElementById("add-selected-sauces-to-cart")?.addEventListener("click", function() {
+        if (!window.currentPizza) return;
+        let sauces = [];
+        let saucesTotal = 0;
+        document.querySelectorAll('#sauces-step .extra-option:checked').forEach(cb => {
+            const name = cb.getAttribute('data-extra');
+            const price = parseFloat(cb.getAttribute('data-price'));
+            sauces.push({ name, price });
+            saucesTotal += price;
+        });
+        const totalPrice = window.currentPizza.price + saucesTotal;
+        cart.push({
+            ...window.currentPizza,
+            extras: sauces,
+            total: totalPrice
+        });
+        window.currentPizza = null;
+        updateCartDisplay();
+        document.querySelectorAll('#sauces-step .extra-option').forEach(cb => cb.checked = false);
+        document.querySelector('.extras-container').style.display = 'none';
+    });
+
+    // 4.4) Додавання тільки соусів (Extras окремо)
+    document.getElementById('add-only-sauces-to-cart')?.addEventListener('click', function() {
+        let extras = [];
+        document.querySelectorAll('.extras-container2 .extra-option:checked').forEach(cb => {
+            extras.push({
+                name: cb.getAttribute('data-extra'),
+                price: parseFloat(cb.getAttribute('data-price'))
+            });
+        });
+        if (extras.length) {
+            extras.forEach(ex => {
+                cart.push({
+                    name: ex.name,
+                    price: ex.price,
+                    extras: [],
+                    total: ex.price
+                });
+            });
+            updateCartDisplay();
+        }
+        document.querySelectorAll('.extras-container2 .extra-option').forEach(cb => cb.checked = false);
+        document.querySelector('.extras-container2').style.display = 'none';
+    });
+
+    // 4.5) Закриття всіх модалок extras
+    document.querySelectorAll('.close-btn, #close-extras-modal2').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelector('.extras-container').style.display = 'none';
+            document.querySelector('.extras-container2').style.display = 'none';
+        });
+    });
+
+    // 4.6) Відкрити центральну модалку Кошика
+    document.getElementById('open-cart-btn')?.addEventListener('click', () => {
+        document.getElementById('cart-modal').style.display = 'flex';
+        updateCartDisplay();
+    });
+
+    // 4.7) Закрити центральну модалку Кошика
+    document.getElementById('close-cart-modal')?.addEventListener('click', () => {
+        document.getElementById('cart-modal').style.display = 'none';
+    });
+
+    // 4.8) Відкрити бокову панель Кошика
+    document.getElementById('open-cart-btn').addEventListener('click', function() {
+        document.getElementById('cart-sidepanel-overlay').style.display = 'block';
+        document.getElementById('cart-sidepanel').classList.add('open');
+        renderSidepanelCart();
+    
+        // приховуємо значок кошика
+        document.getElementById('open-cart-btn').style.display = 'none';
+    });
+
+    // 4.9) Закрити бокову панель Кошика
+    document.getElementById('close-cart-sidepanel').addEventListener('click', function() {
+        document.getElementById('cart-sidepanel-overlay').style.display = 'none';
+        document.getElementById('cart-sidepanel').classList.remove('open');
+    
+        // показуємо значок кошика назад
+        document.getElementById('open-cart-btn').style.display = '';
+    });
+
+    document.getElementById('cart-sidepanel-overlay').addEventListener('click', function() {
+        document.getElementById('cart-sidepanel-overlay').style.display = 'none';
+        document.getElementById('cart-sidepanel').classList.remove('open');
+
+        // показуємо значок кошика назад
+        document.getElementById('open-cart-btn').style.display = '';
+    });
+
+    // 4.10) Кнопка “Очистити кошик” лише у центральній модалці
+    document.getElementById('clear-cart-btn')?.addEventListener('click', () => {
+        if (confirm('Ви дійсно бажаєте очистити кошик?')) {
+            cart = [];
+            updateCartDisplay();
+            renderSidepanelCart && renderSidepanelCart();
+        }
+    });
+
+    // 4.11) Кнопка “Перейти в кошик і оформити замовлення” (sidebar → центральна)
+    document.getElementById('open-order-modal')?.addEventListener('click', () => {
+        // Приховуємо sidebar
+        document.getElementById('cart-sidepanel-overlay').style.display = 'none';
+        document.getElementById('cart-sidepanel').classList.remove('open');
+        renderSidepanelCart && renderSidepanelCart();
+
+        // Відкриваємо центральну модалку Кошика
+        document.getElementById('cart-modal').style.display = 'flex';
+        updateCartDisplay();
+    });
+
+    // 4.12) Тут ваша решта логіки — відправка форми, відображення/приховання адреси тощо…
+    document.getElementById('order-form')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        // … відправка на Telegram, редірект, sessionStorage і т.д. …
+    });
+
+    // 4.13) Показати/приховати поле “Адреса” при виборі “Доставка/Самовивіз”
+    document.querySelectorAll('input[name="delivery_type"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.value === "delivery") {
+                document.getElementById('address-block').style.display = "block";
+                document.getElementById('address').required = true;
+            } else {
+                document.getElementById('address-block').style.display = "none";
+                document.getElementById('address').required = false;
+            }
+        });
+    });
+    const checkedRadio = document.querySelector('input[name="delivery_type"]:checked');
+    if (checkedRadio && checkedRadio.value === "delivery") {
+        document.getElementById('address-block').style.display = "block";
+        document.getElementById('address').required = true;
+    } else {
+        document.getElementById('address-block').style.display = "none";
+        document.getElementById('address').required = false;
+    }
+
+    // Початковий рендер
+    updateCartDisplay();
+    renderSidepanelCart && renderSidepanelCart();
+});
+
+document.getElementById('clear-cart-btn').onclick = function() {
+    if (confirm('Ви дійсно бажаєте очистити кошик?')) {
+        cart = [];
+        updateCartDisplay();
+    }
+};
+
+// Відкриває бокову панель кошика
+document.getElementById('open-cart-btn').addEventListener('click', function() {
+    document.getElementById('cart-sidepanel-overlay').style.display = 'block';
+    document.getElementById('cart-sidepanel').classList.add('open');
+    renderSidepanelCart();
+});
+
+// Закриває бокову панель кошика
+document.getElementById('close-cart-sidepanel').addEventListener('click', function() {
+    document.getElementById('cart-sidepanel-overlay').style.display = 'none';
+    document.getElementById('cart-sidepanel').classList.remove('open');
+});
+document.getElementById('cart-sidepanel-overlay').addEventListener('click', function() {
+    document.getElementById('cart-sidepanel-overlay').style.display = 'none';
+    document.getElementById('cart-sidepanel').classList.remove('open');
+});
+
+function handleOrderSubmit(e) {
+    e.preventDefault();
+
+    // 1) Валідація полів — залишаємо так само, як було
+    let isValid = true;
+    document.querySelectorAll('.error-message').forEach(span => span.innerText = '');
+    document.getElementById('name').classList.remove('input-error');
+    document.getElementById('phone').classList.remove('input-error');
+    document.getElementById('address').classList.remove('input-error');
+
+    const nameValue = document.getElementById('name').value.trim();
+    const phoneValue = document.getElementById('phone').value.trim();
+    const addressValue = document.getElementById('address').value.trim();
+    const deliveryTypeValue = document.querySelector('input[name="delivery_type"]:checked')?.value;
+
+    if (!nameValue) {
+        isValid = false;
+        document.getElementById('error-name').innerText = "Заповніть це поле";
+        document.getElementById('name').classList.add('input-error');
+    }
+    if (!phoneValue) {
+        isValid = false;
+        document.getElementById('error-phone').innerText = "Заповніть це поле";
+        document.getElementById('phone').classList.add('input-error');
+    }
+    if (deliveryTypeValue === "delivery" && !addressValue) {
+        isValid = false;
+        document.getElementById('error-address').innerText = "Заповніть це поле";
+        document.getElementById('address').classList.add('input-error');
+    }
+    if (!isValid) {
+        // Якщо є помилки — зупиняємося
         return;
     }
 
-    // Логіка для піци
-    currentPizzaName = itemName;
-    currentPizzaSize = itemName.includes('30см') ? '30см' : '40см';
-    cart.push({ name: itemName, price: itemPrice });
-
-    // Очищаємо вибрані добавки та соуси
-    resetExtras();
-
-    // Показуємо модальне вікно для вибору добавок
-    openExtrasModal();
-    updateCart();
-}
-
-// Функція онулення вибраних checkbox
-function resetExtras() {
-    document.querySelectorAll('.extra-option').forEach(checkbox => {
-        checkbox.checked = false; // Зняти вибір
-    });
-}
-
-// Оновлення кошика
-function updateCart() {
-    const cartItemsContainer = document.getElementById('cart-items');
-    const cartTotalContainer = document.getElementById('cart-total');
-
-    cartItemsContainer.innerHTML = '';
+    // 2) Обчислення загальної суми замовлення (з урахуванням знижки, якщо користувач авторизований)
     let total = 0;
-
-    cart.forEach((item, index) => {
-        total += item.price;
-
-        const itemElement = document.createElement('div');
-        itemElement.className = 'cart-item';
-
-        // Назва і ціна товару
-        const itemText = document.createElement('span');
-        itemText.textContent = `${item.name} - ${item.price} грн`;
-
-        // Кнопка видалення
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Видалити';
-        deleteButton.className = 'delete-item-btn';
-        deleteButton.addEventListener('click', () => {
-            removeFromCart(index);
-        });
-
-        itemElement.appendChild(itemText);
-        itemElement.appendChild(deleteButton);
-        cartItemsContainer.appendChild(itemElement);
+    window.cart.forEach(item => {
+        // Якщо є item.total (ціна з добавками), беремо її, інакше — просто item.price
+        const priceToShow = (item.total !== undefined ? item.total : item.price);
+        total += Number(priceToShow);
     });
-
-    cartTotalContainer.textContent = `Загальна сума: ${total} грн`;
-}
-function removeFromCart(index) {
-    cart.splice(index, 1); // Видаляємо елемент із масиву
-    updateCart(); // Оновлюємо відображення кошика
-}
-
-
-document.addEventListener('DOMContentLoaded', () => {
-    const simpleItemButtons = document.querySelectorAll('.add-to-cart-simple');
-
-    simpleItemButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const itemName = button.dataset.name;
-            const itemPrice = parseFloat(button.dataset.price);
-
-
-            cart.push({ name: itemName, price: itemPrice });
-
-
-            updateCart();
-        });
-    });
-});
-
-
-// Відкриття модального вікна для добавок
-function openExtrasModal() {
-    document.getElementById('extras-modal').style.display = 'flex';
-}
-
-document.querySelectorAll('.add-to-cart-simple').forEach(button => {
-    button.addEventListener('click', () => {
-        const itemName = button.dataset.name;
-        const itemPrice = parseFloat(button.dataset.price);
-        addSimpleItemToCart(itemName, itemPrice);
-    });
-});
-
-document.getElementById('close-extras-modal').addEventListener('click', () => {
-    document.getElementById('extras-modal').style.display = 'none';
-});
-
-// Додавання вибраних добавок до піци
-document.getElementById('add-to-cart-with-extras').addEventListener('click', () => {
-    const selectedExtras = [];
-    let extraCost = 0;
-
-    document.querySelectorAll('.extra-option:checked').forEach(extra => {
-        const extraName = extra.dataset.extra;
-        selectedExtras.push(extraName);
-
-        const sizePrice = extraPrices[extraName] ? extraPrices[extraName][currentPizzaSize] : 0;
-        extraCost += sizePrice;
-    });
-
-    const pizzaWithExtras = selectedExtras.length > 0 
-        ? `${currentPizzaName} (Добавки: ${selectedExtras.join(", ")})` 
-        : currentPizzaName;
-
-    cart[cart.length - 1].name = pizzaWithExtras;
-    cart[cart.length - 1].price += extraCost;
-
-    updateCart();
-    document.getElementById('extras-modal').style.display = 'none';
-});
-
-// Додавання обробників для кнопок "Купити"
-document.addEventListener('DOMContentLoaded', () => {
-    const addButtons = document.querySelectorAll('.add-to-cart');
-
-    addButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const itemName = button.dataset.name;
-            const itemPrice = parseFloat(button.dataset.price);
-
-            // Перевіряємо чи це піца (за наявністю класу 'pizza-item')
-            const isPizza = button.closest('.pizza-item') !== null;
-            addToCart(itemName, itemPrice, isPizza);
-        });
-    });
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-    const extrasContainer = document.querySelector('.extras-container');
-    const closeModalButton = document.getElementById('close-extras-modal');
-    const addToCartButtons = document.querySelectorAll('.add-to-cart');
-
-    let currentPizzaName = '';
-    let currentPizzaPrice = 0;
-
-    addToCartButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            currentPizzaName = button.dataset.name;
-            currentPizzaPrice = parseFloat(button.dataset.price);
-    
-            // Скидаємо всі чекбокси перед відкриттям модального вікна
-            document.querySelectorAll('.extra-option').forEach(extra => {
-                extra.checked = false; // Знімаємо позначку
-            });
-    
-            // Показати модальне вікно
-            extrasContainer.style.display = 'flex';
-        });
-    });
-    
-
-    // Обробник закриття модального вікна
-    closeModalButton.addEventListener('click', () => {
-        extrasContainer.style.display = 'none';
-    });
-
-    // Обробник додавання піци з добавками до кошика
-    document.getElementById('add-to-cart-with-extras').addEventListener('click', () => {
-        const selectedExtras = [];
-        let totalExtrasPrice = 0;
-
-        document.querySelectorAll('.extra-option:checked').forEach(extra => {
-            selectedExtras.push(extra.dataset.extra);
-            totalExtrasPrice += parseInt(extra.dataset.price);
-        });
-
-        const itemName = selectedExtras.length > 0
-            ? `${currentPizzaName} (Добавки: ${selectedExtras.join(", ")})`
-            : currentPizzaName;
-
-        const itemPrice = currentPizzaPrice + totalExtrasPrice;
-
-        // Додати піцу до кошика (приклад логіки)
-        console.log(`Додано: ${itemName} - ${itemPrice} грн`);
-
-        // Закрити модальне вікно
-        extrasContainer.style.display = 'none';
-    });
-});
-
-function sendToTelegram() {
-    const chatId = "5962734335";
-    const botToken = "7852903031:AAFqpvqkSoIl0brvZR_dLP_KTw0MAtRV32g";
-
-    let message = "Замовлення з PizzaDonya:\n";
-    let total = 0;
-
-    cart.forEach(item => {
-        message += `${item.name} - ${item.price} грн\n`;
-        total += item.price;
-    });
-    message += `\nЗагальна сума: ${total} грн`;
-
-    const deliveryOption = document.querySelector('input[name="delivery-option"]:checked').value;
-    message += `\nОпція доставки: ${deliveryOption}`;
-
-    if (deliveryOption === 'Доставка') {
-        const name = document.getElementById('delivery-name').value;
-        const address = document.getElementById('delivery-address').value;
-        const phone = document.getElementById('delivery-phone').value;
-
-        if (!name || !address || !phone) {
-            alert("Будь ласка, заповніть усі поля для доставки.");
-            return;
-        }
-
-        message += `\nІм'я: ${name}`;
-        message += `\nАдреса: ${address}`;
-        message += `\nТелефон: ${phone}`;
-    }
-
-    if (deliveryOption === 'Самовивіз') {
-        const name = document.getElementById('pickup-name').value;
-        const phone = document.getElementById('pickup-phone').value;
-
-        if (!name || !phone) {
-            alert("Будь ласка, заповніть ім'я та телефон для самовивозу.");
-            return;
-        }
-
-        message += `\nІм'я: ${name}`;
-        message += `\nТелефон: ${phone}`;
-    }
-
-    const comment = document.getElementById('delivery-comment').value.trim();
-    console.log("Коментар:", comment); // Додаємо перевірку
-    if (comment) {
-        message += `\nКоментар: ${comment}`;
+    let finalSum;
+    if (window.isAuthenticated) {
+        // Авторизований — 10% знижка
+        finalSum = (total * 0.9).toFixed(2);
     } else {
-        console.log("Коментар не заповнений.");
+        // Гість — без знижки
+        finalSum = total.toFixed(2);
     }
 
-    const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
-    const params = {
-        chat_id: chatId,
-        text: message,
-    };
+    // 3) Якщо це гість, то формуємо guestId (щоби в банері показувати "Гість Х")
+    // let guestId = null;
+    // if (!window.username) {
+    //     if (sessionStorage.getItem('guestId')) {
+    //         guestId = sessionStorage.getItem('guestId');
+    //     } else {
+    //         guestId = 'guest_' + Date.now();
+    //         sessionStorage.setItem('guestId', guestId);
+    //     }
+    // }
 
-    fetch(url, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(params),
-    })
-        .then(response => response.json())
-        .then(data => {
-            if (data.ok) {
-                alert("Замовлення успішно відправлено у Telegram!");
-            } else {
-                alert(`Помилка: ${data.description}`);
-            }
+    fetch("/submit_order/", {
+        method : "POST",
+        headers: { "Content-Type": "application/json" },
+        body   : JSON.stringify({
+            name         : nameValue,
+            phone        : phoneValue,
+            address      : (deliveryTypeValue === "delivery") ? addressValue : "",
+            delivery_type: deliveryTypeValue,   // "delivery" | "pickup"
+            items        : window.cart.map(i => ({
+                name : i.name,
+                price: (i.total !== undefined ? i.total : i.price)
+            }))
         })
-        .catch(error => {
-            console.error("Помилка:", error);
-            alert("Неможливо відправити замовлення.");
-        });
+    })
+    .then(r => r.ok ? r.json() : Promise.reject(r))
+    .then(({ order_id }) =>
+        console.log(`✔️  Збережено замовлення №${order_id}`))
+    .catch(err =>
+        console.error("❌  Помилка запису в БД:", err));
+
+    // 4) Формуємо фінальні дані для банера:
+    //    - displayName: або ім’я (window.username), або "Гість XYZ"
+    //    - deliveryLabel: "Доставка" або "Самовивіз"
+    let displayName = window.username || "Гість";
+    const deliveryLabel = (deliveryTypeValue === "delivery") ? "Доставка" : "Самовивіз";
+
+    // 5) Розраховуємо випадковий час очікування від 20 до 40 хвилин
+    const waitTime = Math.floor(Math.random() * 21) + 14; // в діапазоні [20..50]
+
+    // 6) Формуємо текст банера (з \n або <br> — щоб розбити на рядки)
+    let bannerHTML  = `<strong>Вітаємо, ${displayName}! Ваше замовлення успішно оформлено.</strong><br>`;
+        bannerHTML += `Сума: <strong>${finalSum} грн</strong>.<br>`;
+        bannerHTML += `Тип доставки: <strong>${deliveryLabel}</strong>`;
+    if (deliveryLabel === "Доставка") {
+        bannerHTML += `, Адреса: <strong>${addressValue}</strong>`;
+    }
+        bannerHTML += `.<br>`;
+        bannerHTML += `Час очікування: <strong>приблизно ${waitTime} хвилин</strong>.`;
+
+    // 7) Закриваємо модалку(и) з формою:
+    //    Якщо у вас є окремі ідентифікатори – закриваємо одразу дві форми:
+    const modalSidebar = document.getElementById('order-form-sidepanel');
+    const modalMain    = document.getElementById('order-form-modal');
+    // Спочатку просто ховаємо самі "вікна", не форму:
+    document.getElementById('cart-modal')?.style.setProperty('display', 'none');
+    document.getElementById('cart-sidepanel-overlay')?.style.setProperty('display', 'none');
+    document.getElementById('cart-sidepanel')?.classList.remove('open');
+    // Якщо у вас є окремі «overlay» для модалки — теж ховаємо.
+    // (Наприклад: document.getElementById('order-modal-overlay').style.display = 'none';)
+
+    // 8) Очищаємо масив cart і оновлюємо відображення (якщо бокова панель відкрита)
+    window.cart = [];
+    updateCartDisplay();
+    if (typeof renderSidepanelCart === 'function') {
+        renderSidepanelCart();
+    }
+    // Якщо був значок «кошика» схований — показуємо його назад
+    const openBtn = document.getElementById('open-cart-btn');
+    if (openBtn) openBtn.style.display = '';
+
+    // 9) Виводимо «зелений» банер у контейнер #order-feedback-container
+    const feedbackContainer = document.getElementById('order-feedback-container');
+    feedbackContainer.innerHTML = `
+        <div style="
+            background-color: #28a745;
+            color: white;
+            font-weight: bold;
+            padding: 12px;
+            text-align: center;
+            font-size: 18px;
+            margin: 16px auto;
+            max-width: 600px;
+            border-radius: 6px;
+            white-space: pre-line;
+        ">
+            ${bannerHTML}
+        </div>
+    `;
+
+    // 10) Якщо ви хочете, щоб це повідомлення зникло через якийсь час (наприклад, через 15 секунд),
+    //     можна використати:
+    // setTimeout(() => { feedbackContainer.innerHTML = ''; }, 15000);
+}
+
+// ---------------------------------------------
+// 2) Підвішуємо ту саму функцію обробки на обидві можливі форми 
+document.addEventListener("DOMContentLoaded", () => {
+    const formSidebar = document.getElementById('order-form-sidepanel');
+    if (formSidebar) formSidebar.addEventListener('submit', handleOrderSubmit);
+
+    const formModal = document.getElementById('order-form-modal');
+    if (formModal) formModal.addEventListener('submit', handleOrderSubmit);
+});
+
+// Якщо треба одразу показати "Адресу" при виборі "Доставка"
+window.addEventListener("DOMContentLoaded", () => {
+    let checked = document.querySelector('input[name="delivery_type"]:checked');
+    if (checked && checked.value === "delivery") {
+        document.getElementById('address-block').style.display = "block";
+        document.getElementById('address').required = true;
+    }
+});
+
+// function renderSidepanelCart() {
+//     const container = document.getElementById('sidepanel-cart-items');
+//     container.innerHTML = '';
+//     let total = 0;
+//     cart.forEach((item, idx) => {
+//         let extrasStr = (item.extras && item.extras.length)
+//             ? `<span style="font-size:13px;color:#ffbb99;"> (${item.extras.map(e=>e.name).join(', ')})</span>` : '';
+//         container.innerHTML += `
+//             <div>
+//                 <strong>${item.name}</strong> — ${item.total || item.price} грн ${extrasStr}
+//                 <button class="remove-item-btn" onclick="removeFromCart(${idx})">Видалити</button>
+//             </div>
+//         `;
+//         total += item.total || item.price;
+//     });
+//     let discountedTotal = total;
+//     if (window.isAuthenticated) {
+//         discountedTotal = (total * 0.9).toFixed(2);
+//         document.getElementById("sidepanel-discount-text").innerText = `Знижка 10%: ${discountedTotal} грн`;
+//     } else {
+//         document.getElementById("sidepanel-discount-text").innerText = "";
+//     }
+//     document.getElementById('sidepanel-cart-total').innerHTML = `<strong>Сума: ${discountedTotal} грн</strong>`;
+
+//     // Оновлення бейджа
+//     const badge = document.getElementById("item-count");
+//     const count = cart.length;
+//     if (count > 0) {
+//         badge.style.display = "inline-block";
+//         badge.textContent = count;
+//     } else {
+//         badge.style.display = "none";
+//         badge.textContent = "";
+//     }
+// }
+
+function renderSidepanelCart() {
+    const container         = document.getElementById('sidepanel-cart-items');
+    const totalContainer    = document.getElementById('sidepanel-cart-total');
+    const discountContainer = document.getElementById('sidepanel-discount-text');
+
+    container.innerHTML = ''; // очищуємо
+    let total = 0;
+
+    cart.forEach((item, idx) => {
+        const priceToShow = (item.total !== undefined ? item.total : item.price);
+        total += Number(priceToShow);
+
+        let extrasStr = '';
+        if (item.extras && item.extras.length > 0) {
+            extrasStr = `
+                <span style="font-size:13px; color:#ffbb99;">
+                  (${ item.extras.map(e => e.name).join(', ') })
+                </span>
+            `;
+        }
+
+        container.innerHTML += `
+            <div style="margin-bottom: 8px; color: #000; font-weight: bold;">
+                <strong>${item.name}</strong> — ${priceToShow} грн ${extrasStr}
+                <button class="remove-item-btn" onclick="removeFromCart(${idx})">
+                  Видалити
+                </button>
+            </div>
+        `;
+    });
+
+    if (window.isAuthenticated) {
+        // Якщо авторизовані — показуємо суму без знижки та знижку 10%
+        discountContainer.innerHTML = `
+            <div style="color: #fff; font-size: 18px; font-weight: bold; margin-top: 8px;">
+                Сума без знижки: ${total.toFixed(2)} грн
+            </div>
+        `;
+        const discounted = (total * 0.9).toFixed(2);
+        totalContainer.innerHTML = `
+            <div style="color: #00cc44; font-size: 18px; font-weight: bold; margin-top: 4px;">
+                Загальна сума зі знижкою 10%: ${discounted} грн
+            </div>
+        `;
+    } else {
+        // Якщо неавторизовані — просто показати загальну суму
+        discountContainer.innerHTML = '';
+        totalContainer.innerHTML = `
+            <div style="color: #00cc44; font-size: 18px; font-weight: bold; margin-top: 7px;">
+                Загальна сума: ${total.toFixed(2)} грн
+            </div>
+        `;
+    }
+
+    // Оновлюємо бейдж
+    const badge = document.getElementById("item-count");
+    const count = cart.length;
+    if (count > 0) {
+        badge.style.display = "inline-block";
+        badge.textContent = count;
+    } else {
+        badge.style.display = "none";
+        badge.textContent = "";
+    }
 }
 
 
-// Додавання обробника подій для кнопки "Відправити замовлення в Telegram"
-document.getElementById('send-to-telegram').addEventListener('click', sendToTelegram);
-
-// Відображення полів для доставки
-document.querySelectorAll('input[name="delivery-option"]').forEach((radio) => {
-    radio.addEventListener('change', function () {
-        if (this.value === 'Доставка') {
-            document.getElementById('delivery-fields').style.display = 'block';
+// Показати/сховати поле "Адреса"
+document.querySelectorAll('input[name="delivery_type"]').forEach((elem) => {
+    elem.addEventListener("change", function() {
+        if (this.value === "delivery") {
+            document.getElementById('address-block').style.display = "block";
+            document.getElementById('address').required = true;
         } else {
-            document.getElementById('delivery-fields').style.display = 'none';
+            document.getElementById('address-block').style.display = "none";
+            document.getElementById('address').required = false;
         }
     });
 });
-document.addEventListener("DOMContentLoaded", () => {
-    let slideIndex = 0; // Поточний слайд
-    const slides = document.querySelectorAll(".slide");
-    let slideInterval;
 
-    // Ініціалізація слайдшоу
-    showSlides(slideIndex);
-    startAutoSlide();
 
-    // Функція для ручного переключення слайдів
-    function changeSlide(n) {
-        slideIndex += n;
-        if (slideIndex >= slides.length) slideIndex = 0; // Повернення до першого слайда
-        if (slideIndex < 0) slideIndex = slides.length - 1; // Перехід до останнього слайда
-        showSlides(slideIndex);
-        resetAutoSlide(); // Скидаємо таймер, щоб користувачеві було зручніше
-    }
 
-    // Функція для показу конкретного слайда
-    function showSlides(index) {
-        slides.forEach(slide => slide.style.display = "none"); // Ховаємо всі слайди
-        slides[index].style.display = "block"; // Показуємо поточний слайд
-    }
 
-    // Функція для автоматичного перемикання слайдів
-    function startAutoSlide() {
-        slideInterval = setInterval(() => {
-            slideIndex++;
-            if (slideIndex >= slides.length) slideIndex = 0; // Повертаємось до першого слайда
-            showSlides(slideIndex);
-        }, 3000); // Зміна слайда кожні 3 секунди
-    }
+// Основна функція — додати піцу з добавками
+function handleAddWithExtras(stepId) {
+    if (!window.currentPizza) return;
 
-    // Функція для скидання автоматичного слайдшоу
-    function resetAutoSlide() {
-        clearInterval(slideInterval); // Зупиняємо таймер
-        startAutoSlide(); // Перезапускаємо автоматичне слайдшоу
-    }
+    let extras = [];
 
-    // Робимо функцію глобальною для кнопок
-    window.changeSlide = changeSlide;
-});
-// Лічильник товарів
-let itemCount = 0;
-
-document.addEventListener("DOMContentLoaded", () => {
-    const addButtons = document.querySelectorAll('.add-to-cart, .add-to-cart-simple');
-    const itemCountDisplay = document.getElementById('item-count');
-
-    addButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            // Збільшуємо лічильник на 1
-            itemCount++;
-            // Оновлюємо відображення лічильника
-            itemCountDisplay.textContent = itemCount;
-
-            // Перевірка класу і додавання до кошика
-            if (button.classList.contains('add-to-cart-simple')) {
-                const itemName = button.dataset.name;
-                const itemPrice = parseFloat(button.dataset.price);
-
-            }
+    document.querySelectorAll('#sauces-step .extra-option:checked').forEach(cb => {
+        extras.push({
+            name: cb.getAttribute('data-extra'),
+            price: parseFloat(cb.getAttribute('data-price'))
         });
     });
-});
-document.addEventListener("DOMContentLoaded", () => {
-    const snackButtons = document.querySelectorAll('.add-to-cart-snack');
-    const itemCountDisplay = document.getElementById('item-count'); // Елемент для відображення лічильника
-    let itemCount = 0; // Початкове значення лічильника
-
-    snackButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            // Збільшуємо лічильник
-            itemCount++;
-            // Оновлюємо відображення лічильника
-            itemCountDisplay.textContent = itemCount;
-            updateCart(); // Оновлюємо відображення кошика
+    document.querySelectorAll('#toppings-step .extra-option:checked').forEach(cb => {
+        let pr = cb.getAttribute('data-price') || cb.getAttribute('data-price-30') || cb.getAttribute('data-price-40');
+        extras.push({
+            name: cb.getAttribute('data-extra'),
+            price: parseFloat(pr || 0)
         });
     });
-});
 
+    const total = window.currentPizza.price + extras.reduce((sum, e) => sum + e.price, 0);
+    cart.push({
+        ...window.currentPizza,
+        extras,
+        total
+    });
+    window.currentPizza = null;
 
-document.getElementById('to-toppings').addEventListener('click', () => {
-    document.getElementById('sauces-step').style.display = 'none';
-    document.getElementById('toppings-step').style.display = 'block';
-});
-
-document.getElementById('close-extras-modal').addEventListener('click', () => {
     document.querySelector('.extras-container').style.display = 'none';
-});
+    document.querySelector('.extras-container2').style.display = 'none';
+    document.querySelectorAll('.extras-step .extra-option').forEach(cb => cb.checked = false);
 
-document.getElementById('add-to-cart-with-extras').addEventListener('click', () => {
-    const selectedExtras = [];
-    let totalExtrasPrice = 0;
-
-    // Збираємо вибрані добавки
-    document.querySelectorAll('.extra-option:checked').forEach(extra => {
-        selectedExtras.push(extra.dataset.extra);
-        totalExtrasPrice += parseInt(extra.dataset.price);
-    });
-
-    // Формуємо назву піци з добавками
-    const itemName = selectedExtras.length > 0
-        ? `${currentPizzaName} (Добавки: ${selectedExtras.join(", ")})`
-        : currentPizzaName;
-
-    const itemPrice = currentPizzaPrice + totalExtrasPrice;
-
-    // Додаємо піцу до кошика
-    cart.push({ name: itemName, price: itemPrice });
-    updateCart();
-
-    // Скидаємо вибір соусів та добавок
-    document.querySelectorAll('.extra-option:checked').forEach(extra => {
-        extra.checked = false; // Знімаємо позначку
-    });
-
-    // Скидаємо поточний вибір піци
-    currentPizzaName = '';
-    currentPizzaSize = '';
-    currentPizzaPrice = 0;
-
-    // Закриваємо модальне вікно
-    document.querySelector('.extras-container').style.display = 'none';
-});
-
-document.addEventListener("DOMContentLoaded", () => {
-    const openCartBtn = document.getElementById("open-cart-btn"); // Кнопка відкриття кошика
-    const closeCartBtn = document.getElementById("close-cart-modal"); // Кнопка закриття кошика
-    const cartModal = document.querySelector(".cart-modal-content"); // Контейнер модального вікна
-    const cartOverlay = document.querySelector(".cart-modal"); // Фон модального вікна
-
-    // Відкрити кошик
-    openCartBtn.addEventListener("click", () => {
-        cartOverlay.style.display = "flex"; // Показуємо фон та модальне вікно
-    });
-
-    // Закрити кошик через кнопку "Закрити"
-    closeCartBtn.addEventListener("click", () => {
-        cartOverlay.style.display = "none"; // Ховаємо модальне вікно
-    });
-
-    // Закриття кошика при кліку поза модальним вікном
-    window.addEventListener("click", (e) => {
-        if (e.target === cartOverlay) {
-            cartOverlay.style.display = "none";
-        }
-    });
-});
-document.addEventListener('DOMContentLoaded', () => {
-    const saucesStep = document.getElementById('sauces-step');
-    const toppingsStep = document.getElementById('toppings-step');
-    const backToSaucesButton = document.getElementById('back-to-sauces');
-
-    // Показуємо соуси, коли натискаємо "Назад"
-    backToSaucesButton.addEventListener('click', () => {
-        saucesStep.style.display = 'block';
-        toppingsStep.style.display = 'none';
-    });
-
-    // При виборі "Перейти до добавок" соуси ховаються
-    document.getElementById('to-toppings').addEventListener('click', () => {
-        saucesStep.style.display = 'none';
-        toppingsStep.style.display = 'block';
-    });
-});
-
-function clearCart() {
-    cart = []; 
-    itemCount = 0; 
-    updateCart(); 
-
-    const itemCountDisplay = document.getElementById('item-count');
-    itemCountDisplay.textContent = itemCount;
+    updateCartDisplay();
+    renderSidepanelCart && renderSidepanelCart();
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    const clearCartButton = document.getElementById('clear-cart-btn');
-    clearCartButton.addEventListener('click', () => {
-        const confirmation = confirm("Ви впевнені, що хочете очистити кошик?");
-        if (confirmation) {
-            clearCart();
-        }
-    });
+document.getElementById('close-cart-modal').addEventListener('click', function() {
+    document.getElementById('cart-modal').style.display = 'none';
 });
 
-// Функція для відображення тільки відповідних цін
-function updateToppingsForSelectedSize(size) {
-    const extras = document.querySelectorAll('.extras-list label'); // Знаходимо всі добавки
+function updateCartDisplay() {
+    const cartItems = document.getElementById('cart-items');
+    cartItems.innerHTML = ''; // очищуємо перед перерендером
 
-    extras.forEach(extra => {
-        const input = extra.querySelector('input'); // Отримуємо чекбокс
-        const priceElement = extra.querySelector('.price'); // Елемент для відображення ціни
-        const price30 = input.getAttribute('data-price-30'); // Ціна для 30 см
-        const price40 = input.getAttribute('data-price-40'); // Ціна для 40 см
+    let total = 0;
 
-        if (size === '30') {
-            // Показуємо лише 30 см
-            input.setAttribute('data-price', price30); // Оновлюємо атрибут data-price
-            if (priceElement) {
-                priceElement.textContent = `${price30} грн`; // Встановлюємо текст для 30 см
-            }
-            extra.style.display = 'block'; // Показуємо елемент
-        } else if (size === '40') {
-            // Показуємо лише 40 см
-            input.setAttribute('data-price', price40); // Оновлюємо атрибут data-price
-            if (priceElement) {
-                priceElement.textContent = `${price40} грн`; // Встановлюємо текст для 40 см
-            }
-            extra.style.display = 'block'; // Показуємо елемент
-        } else {
-            // Приховуємо все інше
-            extra.style.display = 'none';
+    cart.forEach((item, idx) => {
+        const priceToShow = (item.total !== undefined ? item.total : item.price);
+        total += Number(priceToShow);
+
+        // Якщо є extras (додаткові соуси/добавки) — формуємо рядок extrasStr
+        let extrasStr = '';
+        if (item.extras && item.extras.length > 0) {
+            extrasStr = `
+                <span style="font-size:13px; color:#ffbb99;">
+                  (${ item.extras.map(e => e.name).join(', ') })
+                </span>
+            `;
         }
+
+        // Додаємо один рядок із назвою, ціною та кнопкою “Видалити”
+        cartItems.innerHTML += `
+            <div style="margin-bottom: 8px; color: #000; font-weight: bold;">
+                <strong>${item.name}</strong> — ${priceToShow} грн ${extrasStr}
+                <button class="remove-item-btn" onclick="removeFromCart(${idx})">
+                  Видалити
+                </button>
+            </div>
+        `;
     });
-}
 
-function selectPizzaSize(size) {
-    const toppingsStep = document.getElementById('toppings-step');
-    console.log(`Вибрано розмір: ${size}`);
+    // Показуємо суму та знижку / звичайну ціну
+    if (window.isAuthenticated) {
+        // Якщо авторизовані — 10% знижка
+        const discounted = (total * 0.9).toFixed(2);
+        document.getElementById("discount-text").innerHTML = `
+            <div style="color: #00cc44; font-size: 18px; font-weight: bold; margin-top: 8px;">
+                Загальна сума зі знижкою 10%: ${discounted} грн
+            </div>
+        `;
+        document.getElementById('cart-total').innerHTML = `
+            <div style="color: #fff; font-size: 18px; font-weight: bold; margin-top: 4px;">
+                Сума без знижки: ${total.toFixed(2)} грн
+            </div>
+        `;
+    } else {
+        // Якщо неавторизовані — просто одна фраза "Сума: ..."
+        document.getElementById("discount-text").innerText = '';
+        document.getElementById('cart-total').innerHTML = `
+            <div style="color: #fff; font-size: 18px; font-weight: bold; margin-top: 8px;">
+                Сума: ${total.toFixed(2)} грн
+            </div>
+        `;
+    }
 
-    // Видаляємо всі класи розмірів
-    toppingsStep.classList.remove('size-30', 'size-40');
-
-    // Додаємо клас відповідного розміру
-    if (size === '30') {
-        toppingsStep.classList.add('size-30');
-    } else if (size === '40') {
-        toppingsStep.classList.add('size-40');
+    // Оновлюємо бейдж з кількістю товарів
+    const badge = document.getElementById("item-count");
+    const count = cart.length;
+    if (count > 0) {
+        badge.style.display = "inline-block";
+        badge.textContent = count;
+    } else {
+        badge.style.display = "none";
+        badge.textContent = "";
     }
 }
 
-// Початкова ініціалізація: вибір розміру 30 см
-document.addEventListener('DOMContentLoaded', () => {
-    selectPizzaSize('30'); // Встановлюємо розмір 30 см за замовчуванням
-});
-
-// Обробка подій для кнопок вибору розміру
-document.querySelectorAll('.add-to-cart').forEach(button => {
-    button.addEventListener('click', () => {
-        const size = button.textContent.includes('30') ? '30' : '40'; // Визначення розміру
-        selectPizzaSize(size);
+document.getElementById('add-only-sauces-to-cart').addEventListener('click', function() {
+    let extras = [];
+    document.querySelectorAll('.extras-container2 .extra-option:checked').forEach(cb => {
+        extras.push({
+            name: cb.getAttribute('data-extra'),
+            price: parseFloat(cb.getAttribute('data-price')),
+        });
     });
-});
-
-// Відображення полів для "Самовивозу" або "Доставки"
-document.querySelectorAll('input[name="delivery-option"]').forEach((radio) => {
-    radio.addEventListener('change', function () {
-        const pickupFields = document.getElementById('pickup-fields');
-        const deliveryFields = document.getElementById('delivery-fields');
-        
-        if (this.value === 'Доставка') {
-            deliveryFields.style.display = 'block';
-            pickupFields.style.display = 'none';
-        } else {
-            deliveryFields.style.display = 'none';
-            pickupFields.style.display = 'block';
-        }
-    });
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-    const snackButtons = document.querySelectorAll('.add-to-cart-snack');
-    const saucesModal = document.querySelector('.extras-container2');
-    const addToCartWithExtrasButton = document.getElementById('add-to-cart-with-extras2');
-    const closeExtrasModalButton = document.getElementById('close-extras-modal2');
-
-    let currentSnackName = '';
-    let currentSnackPrice = 0;
-
-    snackButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            currentSnackName = button.dataset.name;
-            currentSnackPrice = parseFloat(button.dataset.price);
-
-            // Скидаємо вибір соусів
-            document.querySelectorAll('.extras-list.sauces-list2 input').forEach(extra => {
-                extra.checked = false;
+    if (extras.length) {
+        extras.forEach(ex => {
+            cart.push({
+                name: ex.name,
+                price: ex.price,
+                extras: [],
+                total: ex.price,
             });
-
-            // Показуємо модальне вікно з соусами
-            saucesModal.style.display = 'flex';
         });
-    });
-
-    // Додавання снека з вибраними соусами до кошика
-    addToCartWithExtrasButton.addEventListener('click', () => {
-        const selectedExtras = [];
-        let extraCost = 0;
-
-        document.querySelectorAll('.extras-list.sauces-list2 input:checked').forEach(extra => {
-            const extraName = extra.dataset.extra;
-            const extraPrice = parseFloat(extra.dataset.price);
-            selectedExtras.push(extraName);
-            extraCost += extraPrice;
-        });
-
-        const snackWithExtras = selectedExtras.length > 0
-            ? `${currentSnackName} (Соуси: ${selectedExtras.join(", ")})`
-            : currentSnackName;
-
-        cart.push({
-            name: snackWithExtras,
-            price: currentSnackPrice + extraCost
-        });
-
-        updateCart();
-
-        // Ховаємо модальне вікно
-        saucesModal.style.display = 'none';
-    });
-
-    // Закриття модального вікна
-    closeExtrasModalButton.addEventListener('click', () => {
-        saucesModal.style.display = 'none';
-    });
+        updateCartDisplay();
+    }
+    // Очищення чекбоксів:
+    document.querySelectorAll('.extras-container2 .extra-option').forEach(cb => cb.checked = false);
+    document.querySelector('.extras-container2').style.display = 'none';
 });
 
+
+// document.getElementById('order-form').addEventListener('submit', function(e) {
+//     let isValid = true;
+//     // Очистити всі попередні помилки
+//     document.querySelectorAll('.error-message').forEach(span => span.innerText = '');
+//     document.getElementById('name').classList.remove('input-error');
+//     document.getElementById('phone').classList.remove('input-error');
+//     document.getElementById('address').classList.remove('input-error');
+
+//     const name = document.getElementById('name').value.trim();
+//     const phone = document.getElementById('phone').value.trim();
+//     const address = document.getElementById('address').value.trim();
+//     const delivery = document.querySelector('input[name="delivery_type"]:checked')?.value;
+
+//     if (!name) {
+//         document.getElementById('error-name').innerText = "Заповніть це поле";
+//         document.getElementById('name').classList.add('input-error');
+//         isValid = false;
+//     }
+//     if (!phone) {
+//         document.getElementById('error-phone').innerText = "Заповніть це поле";
+//         document.getElementById('phone').classList.add('input-error');
+//         isValid = false;
+//     }
+//     if (delivery === "delivery" && !address) {
+//         document.getElementById('error-address').innerText = "Заповніть це поле";
+//         document.getElementById('address').classList.add('input-error');
+//         isValid = false;
+//     }
+//     if (!isValid) e.preventDefault();
+// });
+
+////////
+
+// document.getElementById('order-form').addEventListener('submit', function(e) {
+//     e.preventDefault();  
+
+//     // 1) Валідація так само, як було в оригіналі
+//     let isValid = true;
+//     document.querySelectorAll('.error-message').forEach(span => span.innerText = '');
+//     document.getElementById('name').classList.remove('input-error');
+//     document.getElementById('phone').classList.remove('input-error');
+//     document.getElementById('address').classList.remove('input-error');
+
+//     const nameValue = document.getElementById('name').value.trim();
+//     const phoneValue = document.getElementById('phone').value.trim();
+//     const addressValue = document.getElementById('address').value.trim();
+//     const deliveryTypeValue = document.querySelector('input[name="delivery_type"]:checked')?.value;
+
+//     if (!nameValue) {
+//         isValid = false;
+//         document.getElementById('error-name').innerText = "Заповніть це поле";
+//         document.getElementById('name').classList.add('input-error');
+//     }
+//     if (!phoneValue) {
+//         isValid = false;
+//         document.getElementById('error-phone').innerText = "Заповніть це поле";
+//         document.getElementById('phone').classList.add('input-error');
+//     }
+//     if (deliveryTypeValue === "delivery" && !addressValue) {
+//         isValid = false;
+//         document.getElementById('error-address').innerText = "Заповніть це поле";
+//         document.getElementById('address').classList.add('input-error');
+//     }
+//     if (!isValid) {
+//         // якщо є помилки валідації, не йдемо далі
+//         return;
+//     }
+
+//     // 2) Обчислення суми (та знижки, якщо потрібно)
+//     let total = 0;
+//     cart.forEach(item => {
+//         const priceToShow = (item.total !== undefined ? item.total : item.price);
+//         total += Number(priceToShow);
+//     });
+//     let finalSum;
+//     if (window.isAuthenticated) {
+//         // За замовчуванням - 10% знижка для авторизованих
+//         finalSum = (total * 0.9).toFixed(2);
+//     } else {
+//         finalSum = total.toFixed(2);
+//     }
+
+//     // 3) Генерація guestId, якщо користувач не залогований
+//     let guestId = null;
+//     if (!window.username) {
+//         // якщо гість, зберігаємо локально однаковий гостьовий ID 
+//         // (щоб він був однаковий, поки ми на одній сесії)
+//         if (sessionStorage.getItem('guestId')) {
+//             guestId = sessionStorage.getItem('guestId');
+//         } else {
+//             guestId = 'guest_' + Date.now(); 
+//             sessionStorage.setItem('guestId', guestId);
+//         }
+//     }
+
+//     // 4) Який тип доставки будемо показувати у фінальному повідомленні
+//     const deliveryLabel = (deliveryTypeValue === "delivery") ? "Доставка" : "Самовивіз";
+
+//     // 5) Збір всіх деталей у об’єкт
+//     const orderDetails = {
+//         name: nameValue || null,
+//         guestId: guestId,              // або null, якщо авторизований
+//         totalSum: finalSum,
+//         deliveryType: deliveryLabel,
+//         address: (deliveryTypeValue === "delivery") ? addressValue : null,
+//         comment: document.getElementById('comment').value.trim(),
+//         phone: phoneValue,
+//         timestamp: Date.now()
+//     };
+
+//     // 6) Зберігаємо у SessionStorage, щоб потім на головній вивести повідомлення
+//     sessionStorage.setItem('recentOrder', JSON.stringify(orderDetails));
+
+//     // 7) ВІДПРАВЛЯЄМО в Telegram (Fetch у Telegram Bot API).
+//     // — замініть 'YOUR_BOT_TOKEN' і 'YOUR_CHAT_ID' на ваші значення
+//     const BOT_TOKEN = "ВАШ_КОМАНДНИЙ_ТОКЕН_ІЗ_@BotFather_";
+//     const CHAT_ID  = "ВАШ_CHAT_ID";
+//     // Формуємо текст повідомлення, яке прийде в Telegram:
+//     let displayName = window.username 
+//                       ? window.username 
+//                       : ("Гість " + (guestId || ""));
+//     let telegramText = `📦 *Нове Замовлення!*%0A`
+//                      + `*Користувач:* ${displayName}%0A`
+//                      + `*Телефон:* ${orderDetails.phone}%0A`
+//                      + `*Сума:* ${orderDetails.totalSum} грн%0A`
+//                      + `*Тип:* ${orderDetails.deliveryType}%0A`;
+//     if (orderDetails.address) {
+//         telegramText += `*Адреса:* ${orderDetails.address}%0A`;
+//     }
+//     telegramText += `*Коментар:* ${orderDetails.comment || "-"}%0A`
+//                   + `*Час:* ${new Date(orderDetails.timestamp).toLocaleString()}`;
+
+//     fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({
+//             chat_id: CHAT_ID,
+//             parse_mode: "Markdown",
+//             text: telegramText
+//         })
+//     })
+//     .then(res => res.json())
+//     .then(data => {
+//         console.log("Telegram response:", data);
+//         // 8) Нарешті – редіректимо користувача на головну:
+//         window.location.href = "/";
+//     })
+//     .catch(err => {
+//         console.error("Помилка надсилання в Telegram:", err);
+//         // навіть якщо телеграм упав, все одно йдемо на головну
+//         window.location.href = "/";
+//     });
+// });
+
+document.getElementById('order-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    // 1) Валідація полів (як було до цього)
+    let isValid = true;
+    // Очищаємо попередні повідомлення про помилки
+    document.querySelectorAll('.error-message').forEach(span => span.innerText = '');
+    document.getElementById('name').classList.remove('input-error');
+    document.getElementById('phone').classList.remove('input-error');
+    document.getElementById('address').classList.remove('input-error');
+
+    const nameValue = document.getElementById('name').value.trim();
+    const phoneValue = document.getElementById('phone').value.trim();
+    const addressValue = document.getElementById('address').value.trim();
+    const deliveryTypeValue = document.querySelector('input[name="delivery_type"]:checked')?.value;
+
+    if (!nameValue) {
+        isValid = false;
+        document.getElementById('error-name').innerText = "Заповніть це поле";
+        document.getElementById('name').classList.add('input-error');
+    }
+    if (!phoneValue) {
+        isValid = false;
+        document.getElementById('error-phone').innerText = "Заповніть це поле";
+        document.getElementById('phone').classList.add('input-error');
+    }
+    if (deliveryTypeValue === "delivery" && !addressValue) {
+        isValid = false;
+        document.getElementById('error-address').innerText = "Заповніть це поле";
+        document.getElementById('address').classList.add('input-error');
+    }
+    if (!isValid) {
+        // Якщо є помилки — не продовжуємо
+        return;
+    }
+
+    // 2) Підрахунок загальної суми (включно із знижкою)
+    let total = 0;
+    window.cart.forEach(item => {
+        const priceToShow = (item.total !== undefined ? item.total : item.price);
+        total += Number(priceToShow);
+    });
+    let finalSum;
+    if (window.isAuthenticated) {
+        // 10% знижка
+        finalSum = (total * 0.9).toFixed(2);
+    } else {
+        finalSum = total.toFixed(2);
+    }
+
+    // 3) Визначаємо guestId (якщо це гість)
+    let guestId = null;
+    if (!window.username) {
+        if (sessionStorage.getItem('guestId')) {
+            guestId = sessionStorage.getItem('guestId');
+        } else {
+            guestId = 'guest_' + Date.now();
+            sessionStorage.setItem('guestId', guestId);
+        }
+    }
+
+    // 4) Формуємо текст для банера
+    let displayName = window.username ? window.username : ("Гість " + (guestId || ""));
+    const deliveryLabel = (deliveryTypeValue === "delivery") ? "Доставка" : "Самовивіз";
+
+    let bannerText  = `Вітаємо, ${displayName}! Ваше замовлення успішно оформлено.\n`;
+        bannerText += `Сума: ${finalSum} грн\n`;
+        bannerText += `Тип доставки: ${deliveryLabel}${ deliveryLabel === "Доставка" ? `, Адреса: ${addressValue}` : "" }\n`;
+        bannerText += `Час очікування: приблизно 30–40 хвилин.\n`;
+
+    // 5) Закриваємо модальне вікно “Ваш кошик”
+    document.getElementById('cart-modal').style.display = 'none';
+
+    // 6) Очищаємо масив cart та оновлюємо обидва відображення (модалка + бічна панель, якщо вона відкрита)
+    window.cart = [];
+    updateCartDisplay();
+    if (typeof renderSidepanelCart === 'function') {
+        renderSidepanelCart();
+    }
+
+    // 7) Показуємо зелений банер зверху
+    const feedbackContainer = document.getElementById('order-feedback-container');
+    feedbackContainer.innerHTML = `
+        <div style="
+            background-color: #28a745;
+            color: white;
+            font-weight: bold;
+            padding: 12px;
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 16px;
+            white-space: pre-line;
+        ">
+            ${bannerText}
+        </div>
+    `;
+
+    // 8) (Важливо!) Повертаємо видимість значка кошика, якщо він був захований
+    const openBtn = document.getElementById('open-cart-btn');
+    if (openBtn) {
+        openBtn.style.display = '';
+    }
+});
